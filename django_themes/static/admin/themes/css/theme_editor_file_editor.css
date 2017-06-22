@@ -1,0 +1,36 @@
+#ace-holder {
+    border:1px solid #eee;
+    width: 100%;
+    border-radius: 4px;
+}
+
+#ace-holder .submit-row {
+    margin-bottom:0;
+}
+
+#toolbar {
+    border-bottom:1px solid #eee;
+    background: #f8f8f8;
+    margin-bottom:3px;
+}
+
+#toolbar .tabs {
+    padding: 0px;
+    display:inline;
+}
+
+#toolbar .tabs .tab {
+    display: inline-block;
+    padding:5px 15px;
+}
+
+#toolbar .tabs .tab.active {
+    background-color:white;
+    border:1px solid #eee;
+    border-bottom:1px solid white;
+}
+
+#editor-options {
+    display: block;
+    float:right;
+}

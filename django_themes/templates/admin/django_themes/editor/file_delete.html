@@ -1,0 +1,31 @@
+{% extends "admin/django_themes/editor/base.html" %}
+{% load staticfiles i18n admin_urls admin_modify %}
+
+{% block content %}<div id="content-main" class="theme-editor">
+    <div class="delete-confirmation">
+    
+    <ul class="theme-editor path breadcrumbs">
+        {% for part, sub_path in paths %}
+            <li>
+                <a href="{% url opts|admin_urlname:'theme_editor' theme_id=theme.pk|admin_urlquote path=sub_path %}">{{part}}</a>
+            </li>
+        {% endfor %}
+    </ul>
+    
+    <form method="POST">{% csrf_token %}
+        You are about to delete {{file.name}}. Review the file and click "Confirm delete" to continue.
+        
+        <div id="ace-holder">
+        <pre>{{file.contents}}</pre>
+
+        <div class="submit-row">
+            <a class="button cancel-link" href="?">{% trans "No, take me back" %}</a>
+            <input type="submit" value="{% trans "Yes, I'm sure" %}">
+        </div>
+        </div>
+        
+    </form>
+        
+    </div>
+
+{% endblock %}

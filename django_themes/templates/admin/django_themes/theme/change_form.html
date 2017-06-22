@@ -1,0 +1,8 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+{% block object-tools-items %}
+    <li>
+        <a href="{% url opts|admin_urlname:'theme_editor' original.pk|admin_urlquote '' %}" class="historylink">{% trans "Edit theme" %}</a>
+    </li>
+    {{block.super}}
+{% endblock %}

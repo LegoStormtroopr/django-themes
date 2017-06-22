@@ -1,0 +1,100 @@
+{% extends "admin/django_themes/editor/file_text_base.html" %}
+{% load staticfiles i18n admin_urls admin_modify %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/themes/css/theme_editor_file_editor.css" %}" />
+
+<script src="{% static "admin/themes/ace/src-min-noconflict/ace.js" %}" type="text/javascript" charset="utf-8"></script>
+
+{% endblock %}
+
+{% block file_content %}
+
+    <form method='POST'>{% csrf_token %}
+        File name: <input name="path" value="{{form.path.value}}"></input> (Change this to rename or move the file)
+        {% if 'path' in form.errors.keys %}
+            {{ form.path.errors }}
+        {% endif %}
+        <div id="ace-holder">
+            <div id="toolbar">
+                <div id="editor-options">
+                    <select name="useSoftTabs" data-arg-type="bool">
+                        <optgroup label="Indent mode">
+                        <option value="true" selected>Spaces</option>
+                        <option value="false">Tabs</option>
+                        </optgroup>
+                    </select>
+                    <select name="tabSize">
+                        <optgroup label="Indent size">
+                        <option value="2">2</option>
+                        <option value="4" selected>4</option>
+                        <option value="8">8</option>
+                        </optgroup>
+                    </select>
+                    <select name="wrap" data-arg-type="bool">
+                        <optgroup label="Line wrap mode">
+                        <option value="true">Hard</option>
+                        <option value="false" selected>Soft</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <nav class="tabs">
+                    <div class="tab active"><i class="octicon octicon-code"></i> Edit file</div>
+                </nav>
+            </div>
+        
+            {% if 'file_editor' in form.errors.keys %}
+                {{ form.file_editor.errors }}
+            {% endif %}
+
+            <textarea class="theme-editor editor" name="file_editor" data-editor="{{file.ext}}" rows="30">{{form.file_editor.value}}</textarea>
+    
+            <div class="theme-editor submit-row">
+                <button class="button" type='submit'>
+                    Save
+                </button>
+                <a class="button" href="?">
+                    Cancel
+                </a>
+            </div>
+    
+        </div>
+        {% if is_template %}
+        <div id="template help">
+            For help on writing templates, consult the
+            <a href="https://docs.djangoproject.com/en/1.11/ref/templates/language/">Django documentation on wriitng template</a>.
+        </div>
+        {% endif %}
+    </form>
+
+{% endblock %}
+
+{% block ace_options %}
+editor.setOptions({
+    readOnly: false,
+    highlightActiveLine: false,
+})
+editor.renderer.setOptions({
+    showGutter: true,
+    showPrintMargin: true,
+});
+{% endblock %}
+
+{% block tail_scripts %}
+<script>
+    django.jQuery(function () {
+        var $ = django.jQuery
+        $('#editor-options select').change(function () {
+            var val = $(this).val();
+            
+            var argtype = $(this).data('arg-type');
+            if (argtype == "bool") {
+                val = (val == 'true');
+            }
+
+            editor.setOption(this.name, val);
+        });
+    });
+</script>
+{% endblock %}

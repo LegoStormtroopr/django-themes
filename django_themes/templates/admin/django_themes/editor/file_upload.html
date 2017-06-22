@@ -1,0 +1,122 @@
+{% extends "admin/django_themes/editor/base.html" %}
+{% load staticfiles i18n admin_urls admin_modify %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/themes/css/theme_editor_file_editor.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "admin/themes/dropzone/dropzone.css" %}" />
+
+<script src="{% static "admin/themes/ace/src-min-noconflict/ace.js" %}" type="text/javascript" charset="utf-8"></script>
+<script src="{% static "admin/themes/dropzone/dropzone.js" %}" type="text/javascript" charset="utf-8"></script>
+
+{% endblock %}
+
+{% block content %}<div id="content-main" class="theme-editor">
+    <div>
+    
+    <ul class="theme-editor path breadcrumbs">
+        {% for part, sub_path in paths %}
+            <li>
+                <a href="{% url opts|admin_urlname:'theme_editor' theme_id=theme.pk|admin_urlquote path=sub_path %}">{{part}}</a>
+            </li>
+        {% endfor %}
+    </ul>
+    
+    </div>
+
+    <form action="?action=upload" method='POST' class="dropzone" id="upload-dropzone" enctype="multipart/form-data">
+
+        {% csrf_token %}
+        {% if 'file_upload' in form.errors.keys %}
+            ff: {{ form.file_upload.errors }}
+        {% endif %}
+        <div id="message"></div>
+        
+        <div class="fallback">
+            {{ form.file_upload }}
+            <div class="theme-editor submit-row">
+                <button class="button" type='submit'>
+                    Upload
+                </button>
+                <a class="button" href="?">
+                    Cancel
+                </a>
+            </div>
+
+        </div>
+
+        <div class="theme-editor submit-row">
+            <a class="button" id='upload'>
+                Upload
+            </a>
+            <a class="button" href="?">
+                Cancel
+            </a>
+        </div>
+    
+    </form>
+
+<script>
+Dropzone.options.uploadDropzone = {
+  paramName: "file_upload", // The name that will be used to transfer the file
+  multiple:true,
+  maxFilesize: 6, // MB
+  url: "?action=upload_ajax",
+  addRemoveLinks: true,
+  autoProcessQueue: false,
+  init: function() {
+    var myDropzone = this;
+
+    // First change the button to actually tell Dropzone to process the queue.
+    this.element.querySelector("#upload").addEventListener("click", function(e) {
+      console.log("clicky");
+      myDropzone.processQueue();
+      e.preventDefault();
+      e.stopPropagation();
+      var p = document.createElement('p');
+      p.innerHTML = "<b>Your files are being uploaded, once complete things happen</b>"
+      document.getElementById("message").appendChild(p)
+    });
+    // this.element.querySelector("button[type=submit]").addEventListener("click", function(e) {
+    //   // Make sure that the form isn't actually being sent.
+    //   e.preventDefault();
+    //   e.stopPropagation();
+    //   myDropzone.processQueue();
+    //   console.log("here",this, myDropzone);
+    // });
+    this.on("completemultiple", function(files) {
+       console.log(files) 
+      var p = document.createElement('p');
+      p.innerHTML = "<b>Your files are done!</b>"
+      document.getElementById("message").appendChild(p)
+    //   window.location.replace("?");
+    });
+
+    this.on("sendingmultiple", function(files) {
+      console.log(files) 
+      var message = "<p><b>Your files are being uploaded once processed, you'll be redirected</b></p>"
+      document.getElementById("message").innerHTML = message
+    });
+
+    this.on("success", function() {
+      console.log("Doing more!!") 
+      console.log("q", myDropzone.getQueuedFiles(), myDropzone.getQueuedFiles().length == 0)
+      console.log("p", myDropzone.getUploadingFiles(), myDropzone.getUploadingFiles().length == 0)
+
+      if (myDropzone.getQueuedFiles().length == 0 && myDropzone.getUploadingFiles().length == 0) {
+        // All done
+        var message = "<p><b>Complete!</b></p>"
+        document.getElementById("message").innerHTML = message
+        window.location.replace("?");
+      } else {
+        // Keep going!
+        myDropzone.processQueue();
+      }
+    });
+
+  }
+}
+</script>
+
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "admin/django_themes/editor/base.html" %}
+{% load staticfiles i18n admin_urls admin_modify %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/themes/css/theme_editor_file_editor.css" %}" />
+
+<script src="{% static "admin/themes/ace/src-min-noconflict/ace.js" %}" type="text/javascript" charset="utf-8"></script>
+
+{% endblock %}
+
+{% block content %}<div id="content-main" class="theme-editor">
+    <div>
+    
+    <ul class="theme-editor path breadcrumbs">
+        {% for part, sub_path in paths %}
+            <li>
+                <a href="{% url opts|admin_urlname:'theme_editor' theme_id=theme.pk|admin_urlquote path=sub_path %}">{{part}}</a>
+            </li>
+        {% endfor %}
+    </ul>
+    
+    </div>
+    {% block file_content %}
+    {% endblock %}
+
+{% block object-tools %}
+{% if change %}{% if not is_popup %}
+  <ul class="object-tools">
+    {% block object-tools-items %}
+    <li>
+        {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
+        <a href="{% add_preserved_filters history_url %}" class="historylink">{% trans "History" %}</a>
+    </li>
+    {% if has_absolute_url %}<li><a href="{{ absolute_url }}" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif %}
+    {% endblock %}
+  </ul>
+{% endif %}{% endif %}
+{% endblock %}
+<form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form" novalidate>{% csrf_token %}{% block form_top %}{% endblock %}
+<div>
+{% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1" />{% endif %}
+{% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}" />{% endif %}
+{% if save_on_top %}{% block submit_buttons_top %}{% submit_row %}{% endblock %}{% endif %}
+{% if errors %}
+    <p class="errornote">
+    {% if errors|length == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}
+    </p>
+    {{ adminform.form.non_field_errors }}
+{% endif %}
+
+
+</div>
+</form></div>
+
+
+
+
+{% block ace_setup %}
+<script>
+    // Hook up ACE editor to all textareas with data-editor attribute
+    // Thanks to: https://gist.github.com/duncansmart/5267653
+    var editor;
+    django.jQuery(function () {
+        var $ = django.jQuery
+        $('textarea[data-editor]').each(function () {
+            var textarea = $(this);
+            var mode = textarea.data('editor');
+            var editDiv = $('<div>', {
+                position: 'absolute',
+                width: textarea.width(),
+                height: textarea.height(),
+                'class': textarea.attr('class')
+            }).insertBefore(textarea);
+            textarea.css('visibility', 'hidden');
+            textarea.css('display', 'none');
+
+            editor = ace.edit(editDiv[0]);
+            editor.renderer.setShowGutter(false);
+            editor.getSession().setValue(textarea.val());
+            editor.getSession().setMode("ace/mode/" + mode);
+            editor.$blockScrolling = Infinity;
+            
+            {% block ace_options %}
+            editor.setOptions({
+                readOnly: true,
+                highlightActiveLine: false,
+            })
+            editor.renderer.setOptions({
+                showGutter: true,
+                showPrintMargin: true,
+            });
+            {% endblock %}
+
+            // renderer.setShowGutter(true); // Show line numbers
+            
+            // editor.setTheme("ace/theme/idle_fingers");
+            
+            // copy back to textarea on form submit...
+            textarea.closest('form').submit(function () {
+                textarea.val(editor.getSession().getValue());
+            })
+
+        });
+    });
+
+</script>
+
+{% endblock %}
+{% block tail_scripts %}{% endblock %}
+
+{% endblock %}
