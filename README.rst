@@ -52,3 +52,13 @@ Preview changes to themes before they are active
 
 .. image:: https://user-images.githubusercontent.com/2173174/27420119-c5a586a2-5767-11e7-8b49-90a310a2f03e.gif
    :alt: Previewing a change
+
+
+Resources
+---------
+
+This package uses the following open-source resources:
+
+* `AceJS Code Editor v1.2.7 <https://ace.c9.io//>`_ - Editing widget
+* `DropzoneJS v5.0.0 <http://www.dropzonejs.com/>`_ - Drag-and-drop uploading
+* `GitHub Octicons v4.3.0 <https://octicons.github.com//>`_ - Font Icons
