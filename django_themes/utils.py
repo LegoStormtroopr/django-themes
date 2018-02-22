@@ -32,9 +32,12 @@ def set_themes_to_preview(user, themes):
     ]
     cache.set(key,themes_pks, 500)
 
-def delete_preview_cache(user):
+def unset_preview_themes(user, themes):
     key = theme_cache_key(user, "previewing")
-    cache.delete(key)
+    theme_pks = cache.get(key)
+    for theme in themes:
+        theme_pks.remove(theme.id)
+    cache.set(key, theme_pks, 500)
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:

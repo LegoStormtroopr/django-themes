@@ -17,7 +17,7 @@ from django.utils.text import capfirst
 from django.utils.decorators import method_decorator
 
 from django_themes.models import Theme
-from django_themes.utils import add_theme_to_preview, get_previewing_themes, set_themes_to_preview, sizeof_fmt, delete_preview_cache
+from django_themes.utils import add_theme_to_preview, get_previewing_themes, set_themes_to_preview, sizeof_fmt, unset_preview_themes
 from django_themes.storage import default_theme_storage
 
 
@@ -97,7 +97,7 @@ class ThemeAdmin(admin.ModelAdmin):
     preview_themes.short_description = _("Preview themes")
 
     def stop_preview(self, request, queryset):
-        delete_preview_cache(request.user)
+        unset_preview_themes(request.user, queryset)
 
     def get_urls(self):
         """Returns the additional urls used by the theme editor admin pages."""
