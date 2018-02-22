@@ -16,9 +16,6 @@ from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
 from django.utils.decorators import method_decorator
 
-from dbtemplates.utils.template import check_template_syntax
-
-
 from django_themes.models import Theme
 from django_themes.utils import add_theme_to_preview, get_previewing_themes, set_themes_to_preview, sizeof_fmt
 from django_themes.storage import default_theme_storage
@@ -87,28 +84,6 @@ class ThemeAdmin(admin.ModelAdmin):
         return obj.pk in get_previewing_themes(self.request.user)
     is_previewing.short_description = 'Previewing?'
     is_previewing.boolean = True
-
-    # def preview_themes(self, request, queryset):
-    #     errors = []
-    #     for template in queryset:
-    #         valid, error = check_template_syntax(template)
-    #         if not valid:
-    #             errors.append('%s: %s' % (template.name, error))
-    #     if errors:
-    #         count = len(errors)
-    #         message = ungettext(
-    #             "Template syntax check FAILED for %(names)s.",
-    #             "Template syntax check FAILED for %(count)d templates: %(names)s.",
-    #             count)
-    #         self.message_user(request, message %
-    #                           {'count': count, 'names': ', '.join(errors)})
-    #     else:
-    #         count = queryset.count()
-    #         message = ungettext(
-    #             "Template syntax OK.",
-    #             "Template syntax OK for %(count)d templates.", count)
-    #         self.message_user(request, message % {'count': count})
-    # preview_themes.short_description = _("Previewing themes")
 
     def preview_themes(self, request, queryset):
         themes = []
