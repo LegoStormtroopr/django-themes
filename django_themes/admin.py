@@ -17,7 +17,7 @@ from django.utils.text import capfirst
 from django.utils.decorators import method_decorator
 
 from django_themes.models import Theme
-from django_themes.utils import add_theme_to_preview, get_previewing_themes, set_themes_to_preview, sizeof_fmt
+from django_themes.utils import add_theme_to_preview, get_previewing_themes, set_themes_to_preview, sizeof_fmt, delete_preview_cache
 from django_themes.storage import default_theme_storage
 
 
@@ -74,7 +74,7 @@ class ThemeAdmin(admin.ModelAdmin):
     save_as = True
     search_fields = ('name', 'description')
     # actions = ['invalidate_cache', 'repopulate_cache', 'check_syntax']
-    actions = ['preview_themes']
+    actions = ['preview_themes', 'stop_preview']
 
     def get_changelist(self, request, **kwargs):
         self.request = request
@@ -95,6 +95,9 @@ class ThemeAdmin(admin.ModelAdmin):
         self.message_user(request, message %
                           {'count': count, 'names': ', '.join(themes)})
     preview_themes.short_description = _("Preview themes")
+
+    def stop_preview(self, request, queryset):
+        delete_preview_cache(request.user)
 
     def get_urls(self):
         """Returns the additional urls used by the theme editor admin pages."""
@@ -282,6 +285,7 @@ class ThemeAdmin(admin.ModelAdmin):
         size = None
         with default_theme_storage.open("/".join([theme.path, path])) as fh:
             size = " ".join(map(str,sizeof_fmt(fh.size)))
+            contents = fh.read()
             for line in fh:
                 lines += 1
 
@@ -300,6 +304,7 @@ class ThemeAdmin(admin.ModelAdmin):
                     'path': path,
                     'lines': lines,
                     'size': size,
+                    'contents': contents
                     # 'file': default_theme_storage
                 }
         }
