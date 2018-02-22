@@ -8,7 +8,7 @@ from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import ContentFile
 from django.http import Http404
-from django.http.response import JsonResponse 
+from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.utils.translation import ungettext, ugettext_lazy as _
@@ -127,9 +127,9 @@ class ThemeAdmin(admin.ModelAdmin):
         admin_site = self.admin_site
         opts = self.model._meta
         info = opts.app_label, opts.model_name,
-        
+
         print('%s_%s_theme_editor' % info)
-        
+
         theme_edit_urls = [
             url("^(?P<theme_id>[^/]+)/files/(?P<path>.*?)$", admin_site.admin_view(self.theme_edit_view), name='%s_%s_theme_editor' % info),
         ]
@@ -141,7 +141,7 @@ class ThemeAdmin(admin.ModelAdmin):
     @method_decorator(permission_required('django_themes.change_theme')) # user.has_perm('foo.change_bar')
     def theme_edit_view(self, request, theme_id, path): #request, object_id, path=None):
         permission_required('django_theme.change_theme')
-        
+
         theme = get_object_or_404(self.model, pk=theme_id)
 
         path = path.strip('/')
@@ -175,7 +175,7 @@ class ThemeAdmin(admin.ModelAdmin):
             if not default_theme_storage.exists("/".join([theme.path, path])):
                 raise Http404
             _type = "file"
-            
+
         if  _type == "folder":
             return self.render_folder(request, theme, path, paths_and_parts)
         else:
@@ -184,18 +184,17 @@ class ThemeAdmin(admin.ModelAdmin):
 
     def render_file(self, request, theme, path, paths_and_parts):
         opts = self.model._meta
-        
 
-        
         template = "admin/django_themes/editor/file_text_viewer.html"
         # file
         lines = 0
         contents = ""
         size = None
+
         with default_theme_storage.open("/".join([theme.path, path])) as fh:
             size = " ".join(map(str,sizeof_fmt(fh.size)))
+            contents = fh.read()
             for line in fh:
-                contents+=line
                 lines += 1
         # contents = .read()
         context = {
@@ -209,7 +208,7 @@ class ThemeAdmin(admin.ModelAdmin):
             "paths": paths_and_parts,
 
             "file": {
-                    'name': file,
+                    'name': theme.name,
                     'path': path,
                     'contents': contents,
                     'lines': lines,
@@ -238,18 +237,18 @@ class ThemeAdmin(admin.ModelAdmin):
                     message = _("File '%s' saved and renamed successfully!") % path
                 else:
                     message = _("File '%s' saved successfully!") % path
-                
+
                 full_path = "/".join([theme.path, path])
                 if default_theme_storage.exists(full_path):
                     with default_theme_storage.open(full_path, 'w') as fh:
                         fh.write(request.POST.get('file_editor'))
                 else:
                     default_theme_storage.save(full_path, ContentFile(request.POST.get('file_editor')))
-    
+
                 messages.success(request, message)
                 if post_save_delete_path:
                     default_theme_storage.delete("/".join([theme.path, post_save_delete_path]))
-    
+
                 return redirect(
                     reverse("admin:django_themes_theme_theme_editor", kwargs={'theme_id':theme.pk, 'path':path})
                 )
@@ -261,8 +260,8 @@ class ThemeAdmin(admin.ModelAdmin):
         size = None
         with default_theme_storage.open("/".join([theme.path, path])) as fh:
             size = " ".join(map(str,sizeof_fmt(fh.size)))
+            contents = fh.read()
             for line in fh:
-                contents+=line
                 lines += 1
 
         if form is None:
@@ -309,7 +308,6 @@ class ThemeAdmin(admin.ModelAdmin):
         with default_theme_storage.open("/".join([theme.path, path])) as fh:
             size = " ".join(map(str,sizeof_fmt(fh.size)))
             for line in fh:
-                contents+=line
                 lines += 1
 
         context = {
@@ -325,7 +323,6 @@ class ThemeAdmin(admin.ModelAdmin):
             "file": {
                     'name': path.split('/')[-1],
                     'path': path,
-                    'contents': contents,
                     'lines': lines,
                     'size': size,
                     # 'file': default_theme_storage
@@ -337,12 +334,12 @@ class ThemeAdmin(admin.ModelAdmin):
         opts = self.model._meta
         _folders, _files = default_theme_storage.listdir("/".join([theme.path, path]))
         folders = [{'name': folder, 'path': posixpath.join(path, folder)} for folder in _folders]
-        
+
         if len(paths_and_parts) > 1:
             folders.insert(0,
                 {'name': '..', 'path': paths_and_parts[-2][-1]}
             )
-            
+
         files = []
 
         for file in _files:
@@ -376,13 +373,13 @@ class ThemeAdmin(admin.ModelAdmin):
         form = None
         if request.POST:
             form = ThemeAdminFileForm(request.POST)
-            
+
             path = request.POST.get('path')
             if default_theme_storage.exists(path):
                 raise Error
             elif form.is_valid():
                 message = _("File '%s' saved successfully!") % path
-                
+
                 full_path = "/".join([theme.path, path])
                 with default_theme_storage.open(full_path, 'w') as fh:
                     fh.write(request.POST.get('file_editor'))
@@ -416,7 +413,7 @@ class ThemeAdmin(admin.ModelAdmin):
         form = None
         if request.POST:
             form = ThemeAdminUploadFileForm(request.POST, request.FILES)
-            
+
             print(form)
             print(request.POST)
             # path = request.POST.get('path')
@@ -424,8 +421,8 @@ class ThemeAdmin(admin.ModelAdmin):
             #     raise Error
             print("FILES ARE", request.FILES.getlist('file_upload'))
             if form.is_valid():
-                message = _("Files uploaded successfully!") 
-                
+                message = _("Files uploaded successfully!")
+
 
                 files = request.FILES.getlist('file_upload')
                 for f in files:
@@ -478,4 +475,3 @@ class ThemeAdmin(admin.ModelAdmin):
         return JsonResponse(message, status=code)
 
 admin.site.register(Theme, ThemeAdmin)
-

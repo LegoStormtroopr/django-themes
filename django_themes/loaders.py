@@ -34,12 +34,12 @@ class ThemeTemplateLoader(BaseLoader):
         from django_themes.middleware import get_current_user_key
         from django_themes.utils import get_previewing_themes
         user_key = get_current_user_key()
-        
+
         preview_pks = []
         if user_key is not None:
             preview_pks = get_previewing_themes(user_key)
-        logger.debug("previewing", user_key, preview_pks)
-            
+        # logger.debug("previewing", user_key, preview_pks)
+
         return Theme.objects.all().filter(Q(is_active=True) | Q(pk__in=preview_pks)).order_by('-order')
 
     def get_contents(self, origin):
