@@ -5,7 +5,6 @@ from django.views.generic.base import ContextMixin
 from django.shortcuts import get_object_or_404
 from django.utils.text import capfirst
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django import forms
 from django.contrib import messages
 from django.urls import reverse
 from django.conf import settings
@@ -15,26 +14,9 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django_themes.storage import default_theme_storage
 from django_themes.models import Theme
 from django_themes.utils import sizeof_fmt
-# from django_themes.admin import *
+from django_themes.forms import ThemeAdminFileForm, ThemeAdminUploadFileForm
 
 import posixpath
-
-# Forms
-
-class ThemeAdminFileForm(forms.Form):
-    path = forms.CharField()
-    file_editor = forms.CharField()
-
-    def clean_path(self):
-        path = self.cleaned_data.get("path")
-
-        if '..' in path:
-            self.add_error("path", "No relative paths allowed.")
-        if path.endswith('/') or path.endswith('\\'):
-            self.add_error("path", "A filename must follow be included after a directory separator.")
-
-class ThemeAdminUploadFileForm(forms.Form):
-    file_upload = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
 
 # Admin views
 
@@ -137,7 +119,6 @@ class ThemeAdminView(GenericAdminView):
     def render_file(self):
 
         self.template_name = "admin/django_themes/editor/file_text_viewer.html"
-        self.title = "Viewing file {file} | Theme Editor {theme.name}".format(theme=self.theme, file=self.path)
         self.context_read_file= True
 
         context = self.get_context_data()
