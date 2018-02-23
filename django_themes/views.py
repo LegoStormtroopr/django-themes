@@ -8,6 +8,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django import forms
 from django.contrib import messages
 from django.urls import reverse
+from django.conf import settings
 # from .file_manager import FileManager
 
 from django_themes.storage import default_theme_storage
@@ -108,12 +109,17 @@ class ThemeAdminView(GenericAdminView):
 
         self.set_data(request, theme_id, path)
 
+        full_path = "/".join([self.theme.path, self.path])
+
         try:
-            default_theme_storage.listdir("/".join([self.theme.path, self.path]))
+            # Try to list dir (check if folder)
+            default_theme_storage.listdir(full_path)
             _type = "folder"
         except:
-            if not default_theme_storage.exists("/".join([self.theme.path, self.path])):
-                raise Http404
+            if not default_theme_storage.exists(full_path):
+                # If the path doesn't exist
+                return HttpResponse('No such directory %s/%s' % (settings.THEMES_FILE_ROOT, full_path))
+            # If not directory but file exists
             _type = "file"
 
         if  _type == "folder":
