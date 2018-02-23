@@ -42,7 +42,7 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
 
     permission_required = 'django_themes.change_theme'
 
-    file_read = False
+    context_read_file = False
     opts = None
     theme = None
     path = None
@@ -86,9 +86,10 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
             "theme": self.theme,
             "path": self.path,
             "paths": self.paths_and_parts,
+            "title": "| Theme Editor {theme.name}".format(theme=self.theme)
         })
 
-        if (self.file_read):
+        if (self.context_read_file):
             context.update(self.read_file())
 
         return context
@@ -137,14 +138,16 @@ class ThemeAdminView(GenericAdminView):
 
         self.template_name = "admin/django_themes/editor/file_text_viewer.html"
         self.title = "Viewing file {file} | Theme Editor {theme.name}".format(theme=self.theme, file=self.path)
-        self.file_read = True
+        self.context_read_file= True
 
-        return self.render_to_response(self.get_context_data())
+        context = self.get_context_data()
+        context['title'] = "Viewing File " + context['title']
+
+        return self.render_to_response(context)
 
     def render_folder(self):
 
         self.template_name = "admin/django_themes/editor/browser.html"
-        self.file_read = False
 
         _folders, _files = default_theme_storage.listdir("/".join([self.theme.path, self.path]))
         folders = [{'name': folder, 'path': posixpath.join(self.path, folder)} for folder in _folders]
@@ -168,13 +171,14 @@ class ThemeAdminView(GenericAdminView):
 
         context = self.get_context_data()
         context.update({'files': files, 'folders': folders})
+        context['title'] = "Viewing Folder " + context['title']
 
         return self.render_to_response(context)
 
 class EditView(GenericAdminView):
 
     template_name = "admin/django_themes/editor/file_text_editor.html"
-    file_read = True
+    context_read_file = True
     form = None
 
     def get(self, request, theme_id, path):
@@ -185,6 +189,7 @@ class EditView(GenericAdminView):
             self.form = ThemeAdminFileForm(initial={'path':self.path, 'file_editor': context['file']['contents']})
 
         context.update({'form': self.form})
+        context['title'] = "Editing File " + context['title']
 
         return self.render_to_response(context)
 
@@ -222,13 +227,12 @@ class EditView(GenericAdminView):
 class DeleteView(GenericAdminView):
 
     template_name = "admin/django_themes/editor/file_delete.html"
-    file_read = True
+    context_read_file = True
 
     def get(self, request, theme_id, path):
 
         context = self.get_context_data()
-
-        context.update({'title': "Theme Editor - deleting %s:%s" % (self.theme, self.path)})
+        context['title'] = "Deleting File " + context['title']
 
         return self.render_to_response(context)
 
@@ -247,7 +251,6 @@ class NewView(GenericAdminView):
 
     template_name = "admin/django_themes/editor/file_text_editor.html"
     form = None
-    file_read = False
 
     def get(self, request, theme_id, path):
 
@@ -257,7 +260,7 @@ class NewView(GenericAdminView):
             self.form = ThemeAdminFileForm(initial={'path':self.path+'/new_file', 'file_editor': ''})
 
         context.update({'form': self.form})
-        context.update({'title': "Creating new file | Theme Editor {theme.name}".format(theme=self.theme)})
+        context['title'] = "Creating File " + context['title']
 
         return self.render_to_response(context)
 
@@ -284,7 +287,6 @@ class NewView(GenericAdminView):
 class UploadView(GenericAdminView):
 
     template_name = "admin/django_themes/editor/file_upload.html"
-    file_read = False
     form = None
 
     def get(self, request, theme_id, path):
@@ -295,7 +297,7 @@ class UploadView(GenericAdminView):
             self.form = ThemeAdminUploadFileForm(initial={'path':self.path+'/new_file', 'file_editor': ''})
 
         context.update({'form': self.form})
-        context.update({'title': "Upload File | Theme Editor {theme.name}".format(theme=self.theme)})
+        context['title'] = "Upload File " + context['title']
 
         return self.render_to_response(context)
 
