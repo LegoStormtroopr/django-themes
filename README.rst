@@ -31,14 +31,16 @@ How to install & configure
     THEMES_FILE_ROOT = os.getenv('DJANGO_THEMES_ROOT', os.path.join(BASE_DIR, "themes")) # Where your themes are
     THEMES_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage' # Or whatever storage you need
 
-4. If you want to be able to preview themes live, add the appropriate middleware *after* everything else.
+4. If you need to render uploaded templates add the template loader 'django_themes.loaders.ThemeTemplateLoader' to your TEMPLATES setting
+
+5. If you want to be able to preview themes live, add the appropriate middleware *after* everything else.
    Note: to get the current user during template loading, this needs to store the user of a request in ``_thread_locals``.
    `I've read that some Django core devs consider this a security issue, but most people are ok with it <https://groups.google.com/forum/#!topic/django-users/ia9y6L-g34g>`_.::
 
-    MIDDLEWARE_CLASSES = (
-
+    MIDDLEWARE = [
+      ...
       'django_themes.middleware.PreviewWithCurrentUserMiddleware',
-    )
+    ]
 
 See it in action
 ----------------
