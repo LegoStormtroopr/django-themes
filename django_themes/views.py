@@ -9,6 +9,7 @@ from django import forms
 from django.contrib import messages
 from django.urls import reverse
 from django.conf import settings
+from django.contrib.auth.mixins import PermissionRequiredMixin
 # from .file_manager import FileManager
 
 from django_themes.storage import default_theme_storage
@@ -37,7 +38,9 @@ class ThemeAdminUploadFileForm(forms.Form):
 
 # Admin views
 
-class GenericAdminView(TemplateView):
+class GenericAdminView(PermissionRequiredMixin, TemplateView):
+
+    permission_required = 'django_themes.change_theme'
 
     file_read = False
     opts = None
