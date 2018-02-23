@@ -50,6 +50,11 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
     template_name = None
     title = None
 
+    def dispatch(self, request, theme_id, path):
+
+        self.set_data(theme_id, path)
+        return super(GenericAdminView, self).dispatch(request, theme_id, path)
+
     def read_file(self):
 
         lines = 0
@@ -88,7 +93,7 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
 
         return context
 
-    def set_data(self, request, theme_id, path):
+    def set_data(self, theme_id, path):
         # permission_required('django_theme.change_theme')
         self.theme = get_object_or_404(Theme, pk=theme_id)
 
@@ -109,8 +114,6 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
 class ThemeAdminView(GenericAdminView):
 
     def get(self, request, theme_id, path):
-
-        self.set_data(request, theme_id, path)
 
         full_path = "/".join([self.theme.path, self.path])
 
@@ -176,8 +179,6 @@ class EditView(GenericAdminView):
 
     def get(self, request, theme_id, path):
 
-        self.set_data(request, theme_id, path)
-
         context = self.get_context_data()
 
         if self.form is None:
@@ -189,7 +190,6 @@ class EditView(GenericAdminView):
 
     def post(self, request, theme_id, path):
 
-        self.set_data(request, theme_id, path)
         form = ThemeAdminFileForm(request.POST)
 
         if form.is_valid():
@@ -226,7 +226,6 @@ class DeleteView(GenericAdminView):
 
     def get(self, request, theme_id, path):
 
-        self.set_data(request, theme_id, path)
         context = self.get_context_data()
 
         context.update({'title': "Theme Editor - deleting %s:%s" % (self.theme, self.path)})
@@ -235,7 +234,6 @@ class DeleteView(GenericAdminView):
 
     def post(self, request, theme_id, path):
 
-        self.set_data(request, theme_id, path)
         self.file_read = False
 
         default_theme_storage.delete("/".join([self.theme.path, self.path]))
@@ -253,8 +251,6 @@ class NewView(GenericAdminView):
 
     def get(self, request, theme_id, path):
 
-        self.set_data(request, theme_id, path)
-
         context = self.get_context_data()
 
         if self.form is None:
@@ -266,8 +262,6 @@ class NewView(GenericAdminView):
         return self.render_to_response(context)
 
     def post(self, request, theme_id, path):
-
-        self.set_data(request, theme_id, path)
 
         form = ThemeAdminFileForm(request.POST)
 
@@ -295,8 +289,6 @@ class UploadView(GenericAdminView):
 
     def get(self, request, theme_id, path):
 
-        self.set_data(request, theme_id, path)
-
         context = self.get_context_data()
 
         if self.form is None:
@@ -309,7 +301,6 @@ class UploadView(GenericAdminView):
 
     def post(self, request, theme_id, path):
 
-        self.set_data(request, theme_id, path)
         message = "Files uploaded successfully!"
 
         files = request.FILES.getlist('file_upload')
