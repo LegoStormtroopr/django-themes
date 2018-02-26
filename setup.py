@@ -34,6 +34,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     keywords='django themes',
-    install_requires=['django'], # I mean obviously you'll have django installed if you want to use this.
+    install_requires=['django', 'python-magic'], # I mean obviously you'll have django installed if you want to use this.
 
 )

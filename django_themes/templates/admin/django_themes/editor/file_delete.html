@@ -3,7 +3,7 @@
 
 {% block content %}<div id="content-main" class="theme-editor">
     <div class="delete-confirmation">
-    
+
     <ul class="theme-editor path breadcrumbs">
         {% for part, sub_path in paths %}
             <li>
@@ -11,21 +11,23 @@
             </li>
         {% endfor %}
     </ul>
-    
+
     <form method="POST">{% csrf_token %}
         You are about to delete {{file.name}}. Review the file and click "Confirm delete" to continue.
-        
+
         <div id="ace-holder">
+        {% if file.filetype == 'text' %}
         <pre>{{file.contents}}</pre>
+        {% endif %}
 
         <div class="submit-row">
             <a class="button cancel-link" href="?">{% trans "No, take me back" %}</a>
             <input type="submit" value="{% trans "Yes, I'm sure" %}">
         </div>
         </div>
-        
+
     </form>
-        
+
     </div>
 
 {% endblock %}

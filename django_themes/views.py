@@ -17,7 +17,7 @@ from django_themes.utils import sizeof_fmt
 from django_themes.forms import ThemeAdminFileForm, ThemeAdminUploadFileForm
 
 import posixpath
-
+import magic
 # Admin views
 
 class GenericAdminView(PermissionRequiredMixin, TemplateView):
@@ -40,17 +40,24 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
     def read_file(self):
 
         lines = 0
+        contents = ''
+
         with default_theme_storage.open("/".join([self.theme.path, self.path])) as fh:
-            size = " ".join(map(str,sizeof_fmt(fh.size)))
             contents = fh.read()
-            for line in fh:
-                lines += 1
+            mime = magic.from_buffer(contents, mime=True)
+            filetype = mime.split('/')[0]
+            size = " ".join(map(str,sizeof_fmt(fh.size)))
+
+            if filetype == 'text':
+                for line in fh:
+                    lines += 1
 
         file_context = {
             'file' : {
                 'contents': contents,
                 'lines': lines,
-                'size': size
+                'size': size,
+                'filetype': filetype
             }
         }
         return file_context
