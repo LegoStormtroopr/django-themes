@@ -18,6 +18,7 @@ from django_themes.forms import ThemeAdminFileForm, ThemeAdminUploadFileForm
 
 import posixpath
 import magic
+import base64
 # Admin views
 
 import logging
@@ -54,6 +55,11 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
             if filetype == 'text':
                 for line in fh:
                     lines += 1
+            elif filetype == 'image':
+                # Base64 encode and decode to unicode string
+                data64 = base64.b64encode(contents).decode()
+                # Build URI string
+                contents = u'data:%s;base64,%s' % (mime, data64)
 
         file_context = {
             'file' : {

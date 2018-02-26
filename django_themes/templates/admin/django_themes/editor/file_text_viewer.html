@@ -20,6 +20,8 @@
 
     {% if file.filetype == 'text' %}
     <textarea class="theme-editor editor" name="file_editor" data-editor="{{file.ext}}" rows="15">{{file.contents}}</textarea>
+    {% elif file.filetype == 'image' %}
+    <img src="{{ file.contents }}"></img>
     {% endif %}
 
     </div>
