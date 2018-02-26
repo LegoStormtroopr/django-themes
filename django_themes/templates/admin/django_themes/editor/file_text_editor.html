@@ -43,22 +43,22 @@
                     <div class="tab active"><i class="octicon octicon-code"></i> Edit file</div>
                 </nav>
             </div>
-        
+
             {% if 'file_editor' in form.errors.keys %}
                 {{ form.file_editor.errors }}
             {% endif %}
 
             <textarea class="theme-editor editor" name="file_editor" data-editor="{{file.ext}}" rows="30">{{form.file_editor.value}}</textarea>
-    
+
             <div class="theme-editor submit-row">
                 <button class="button" type='submit'>
                     Save
                 </button>
-                <a class="button" href="?">
+                <a class="button" href="{% url opts|admin_urlname:'theme_editor' theme.id path %}">
                     Cancel
                 </a>
             </div>
-    
+
         </div>
         {% if is_template %}
         <div id="template help">
@@ -87,7 +87,7 @@ editor.renderer.setOptions({
         var $ = django.jQuery
         $('#editor-options select').change(function () {
             var val = $(this).val();
-            
+
             var argtype = $(this).data('arg-type');
             if (argtype == "bool") {
                 val = (val == 'true');
