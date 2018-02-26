@@ -42,6 +42,6 @@ def unset_preview_themes(user, themes):
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
         if abs(num) < 1024.0:
-            return (str(num), unit+suffix)
+            return ("%.2f"%num, unit+suffix)
         num /= 1024.0
-    return  (str(num), 'Yi'+suffix)
+    return  ("%.2f"%num, 'Yi'+suffix)
