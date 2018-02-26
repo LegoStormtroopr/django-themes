@@ -3,7 +3,7 @@
 
 {% block file_content %}
     <div class="theme-editor file-details">
-        <pre>{{file.lines}} lines | {{file.size}}</pre>
+        <pre>{% if file.filetype == 'text' %}{{file.lines}} lines |{% endif %} {{file.size}}</pre>
         <span class="actions">
             {% if file.filetype == 'text' %}
             <a class="button" href="{% url 'admin:admin_edit' theme.id path %}">
