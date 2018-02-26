@@ -20,6 +20,9 @@ import posixpath
 import magic
 # Admin views
 
+import logging
+logger = logging.getLogger(__name__)
+
 class GenericAdminView(PermissionRequiredMixin, TemplateView):
 
     permission_required = 'django_themes.change_theme'
@@ -231,8 +234,9 @@ class DeleteView(GenericAdminView):
         default_theme_storage.delete("/".join([self.theme.path, self.path]))
         message = "File '%s' deleted successfully!" % path
         messages.success(request, message)
+        new_path = ''
         return HttpResponseRedirect(
-            reverse("admin:django_themes_theme_theme_editor", kwargs={'theme_id':self.theme.pk, 'path':self.path.rsplit('/',1)[0]})
+            reverse("admin:django_themes_theme_theme_editor", kwargs={'theme_id':self.theme.pk, 'path':new_path})
         )
 
 class NewView(GenericAdminView):

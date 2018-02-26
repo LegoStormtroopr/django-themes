@@ -18,10 +18,12 @@
         <div id="ace-holder">
         {% if file.filetype == 'text' %}
         <pre>{{file.contents}}</pre>
+        {% else %}
+        <pre>{{file.name}}</pre>
         {% endif %}
 
         <div class="submit-row">
-            <a class="button cancel-link" href="?">{% trans "No, take me back" %}</a>
+            <a class="button cancel-link" href="{% url opts|admin_urlname:'theme_editor' theme.id path %}">{% trans "No, take me back" %}</a>
             <input type="submit" value="{% trans "Yes, I'm sure" %}">
         </div>
         </div>
