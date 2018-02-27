@@ -12,5 +12,7 @@ class ThemeAdminFileForm(forms.Form):
         if path.endswith('/') or path.endswith('\\'):
             self.add_error("path", "A filename must follow be included after a directory separator.")
 
+        return path
+
 class ThemeAdminUploadFileForm(forms.Form):
     file_upload = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
