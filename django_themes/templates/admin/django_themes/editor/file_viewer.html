@@ -1,0 +1,42 @@
+{% extends "admin/django_themes/editor/file_text_base.html" %}
+{% load staticfiles i18n admin_urls admin_modify %}
+
+{% block file_content %}
+    <div class="theme-editor file-details">
+        <pre>{% if file.filetype == 'text' %}{{file.lines}} lines |{% endif %} {{file.size}}</pre>
+        <span class="actions">
+            {% if file.filetype == 'text' %}
+            <a class="button" href="{% url 'admin:admin_edit' theme.id path %}">
+                <i class="octicon octicon-pencil"></i> Edit
+            </a>
+            {% endif %}
+            <a class="button delete" href="{% url 'admin:admin_delete' theme.id path %}">
+                <i class="octicon octicon-trashcan"></i> Delete
+            </a>
+        </span>
+    </div>
+
+    <div id="ace-holder">
+
+    {% if file.filetype == 'text' %}
+    <textarea class="theme-editor editor" name="file_editor" data-editor="{{file.ext}}" rows="15">{{file.contents}}</textarea>
+    {% elif file.filetype == 'image' %}
+    <img src="{{ file.contents }}"></img>
+    {% endif %}
+
+    </div>
+{% endblock %}
+
+{% block ace_options %}
+editor.setOptions({
+    readOnly: true,
+    highlightActiveLine: false,
+})
+editor.renderer.setOptions({
+    showGutter: true,
+    showPrintMargin: true,
+});
+editor.session.setOptions({
+    useWorker: false,
+});
+{% endblock %}
