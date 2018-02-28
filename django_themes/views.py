@@ -141,7 +141,7 @@ class ThemeAdminView(GenericAdminView):
 
     def render_file(self):
 
-        self.template_name = "admin/django_themes/editor/file_text_viewer.html"
+        self.template_name = "admin/django_themes/editor/file_viewer.html"
         self.context_read_file= True
 
         context = self.get_context_data()

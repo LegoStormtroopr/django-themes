@@ -99,15 +99,15 @@ Dropzone.options.uploadDropzone = {
     });
 
     this.on("success", function() {
-      console.log("Doing more!!")
-      console.log("q", myDropzone.getQueuedFiles(), myDropzone.getQueuedFiles().length == 0)
-      console.log("p", myDropzone.getUploadingFiles(), myDropzone.getUploadingFiles().length == 0)
+      // console.log("Doing more!!")
+      // console.log("q", myDropzone.getQueuedFiles(), myDropzone.getQueuedFiles().length == 0)
+      // console.log("p", myDropzone.getUploadingFiles(), myDropzone.getUploadingFiles().length == 0)
 
       if (myDropzone.getQueuedFiles().length == 0 && myDropzone.getUploadingFiles().length == 0) {
         // All done
         var message = "<p><b>Complete!</b></p>"
         document.getElementById("message").innerHTML = message
-        window.location.replace("?");
+        // window.location.replace("?");
       } else {
         // Keep going!
         myDropzone.processQueue();
