@@ -69,7 +69,7 @@ Dropzone.options.uploadDropzone = {
 
     // First change the button to actually tell Dropzone to process the queue.
     this.element.querySelector("#upload").addEventListener("click", function(e) {
-      console.log("clicky");
+      //console.log("clicky");
       myDropzone.processQueue();
       e.preventDefault();
       e.stopPropagation();
@@ -77,19 +77,12 @@ Dropzone.options.uploadDropzone = {
       p.innerHTML = "<b>Your files are being uploaded, once complete things happen</b>"
       document.getElementById("message").appendChild(p)
     });
-    // this.element.querySelector("button[type=submit]").addEventListener("click", function(e) {
-    //   // Make sure that the form isn't actually being sent.
-    //   e.preventDefault();
-    //   e.stopPropagation();
-    //   myDropzone.processQueue();
-    //   console.log("here",this, myDropzone);
-    // });
+
     this.on("completemultiple", function(files) {
        console.log(files)
       var p = document.createElement('p');
       p.innerHTML = "<b>Your files are done!</b>"
       document.getElementById("message").appendChild(p)
-    //   window.location.replace("?");
     });
 
     this.on("sendingmultiple", function(files) {
@@ -99,9 +92,9 @@ Dropzone.options.uploadDropzone = {
     });
 
     this.on("success", function() {
-      // console.log("Doing more!!")
-      // console.log("q", myDropzone.getQueuedFiles(), myDropzone.getQueuedFiles().length == 0)
-      // console.log("p", myDropzone.getUploadingFiles(), myDropzone.getUploadingFiles().length == 0)
+      //console.log("Doing more!!")
+      //console.log("q", myDropzone.getQueuedFiles(), myDropzone.getQueuedFiles().length == 0)
+      //console.log("p", myDropzone.getUploadingFiles(), myDropzone.getUploadingFiles().length == 0)
 
       if (myDropzone.getQueuedFiles().length == 0 && myDropzone.getUploadingFiles().length == 0) {
         // All done

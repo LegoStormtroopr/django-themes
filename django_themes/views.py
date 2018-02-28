@@ -72,9 +72,9 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
         }
         return file_context
 
-    def get_context_data(self):
+    def get_context_data(self, **kwargs):
 
-        context = super(GenericAdminView, self).get_context_data()
+        context = super(GenericAdminView, self).get_context_data(**kwargs)
 
         context.update({
             "opts": self.opts,
@@ -185,8 +185,8 @@ class EditView(GenericAdminView, FormView):
     context_read_file = True
     form_class = ThemeAdminFileForm
 
-    def get_context_data(self):
-        context = super(EditView, self).get_context_data()
+    def get_context_data(self, **kwargs):
+        context = super(EditView, self).get_context_data(**kwargs)
         context['title'] = "Editing File " + context['title']
         return context
 
@@ -250,8 +250,8 @@ class NewView(GenericAdminView, FormView):
     template_name = "admin/django_themes/editor/file_text_editor.html"
     form_class = ThemeAdminFileForm
 
-    def get_context_data(self):
-        context = super(NewView, self).get_context_data()
+    def get_context_data(self, **kwarfs):
+        context = super(NewView, self).get_context_data(**kwargs)
         context['title'] = "Creating File " + context['title']
         return context
 
@@ -288,8 +288,8 @@ class UploadView(GenericAdminView, FormView):
     def get_initial(self):
         return {'path':self.path+'/new_file', 'file_editor': ''}
 
-    def get_context_data(self):
-        context = super(UploadView, self).get_context_data()
+    def get_context_data(self, **kwargs):
+        context = super(UploadView, self).get_context_data(**kwargs)
         context['title'] = "Upload File " + context['title']
         return context
 
@@ -297,12 +297,12 @@ class UploadView(GenericAdminView, FormView):
         return reverse("admin:django_themes_theme_theme_editor", kwargs={'theme_id':self.theme.pk, 'path':self.path})
 
     def form_valid(self, form):
+        logger.debug('Uploaded via FORM')
         message = "Files uploaded successfully!"
 
-        files = form.cleaned_data['file_upload']
-        for f in files:
-            full_path = "/".join([self.theme.path, self.path, f.name])
-            default_theme_storage.save(full_path, f)
+        f = form.cleaned_data['file_upload']
+        full_path = "/".join([self.theme.path, self.path, f.name])
+        default_theme_storage.save(full_path, f)
 
         messages.success(self.request, message)
 
@@ -312,9 +312,11 @@ class UploadAjaxView(GenericAdminView):
 
     def post(self, request, theme_id, path):
 
+        logger.debug('Uploaded via AJAX')
         try:
-            files = request.FILES.getlist('file_upload')
+            files = self.request.FILES.getlist('file_upload')
             for f in files:
+                logger.debug(f)
                 full_path = "/".join([self.theme.path, self.path, f.name])
                 default_theme_storage.save(full_path, f)
             message = {"ok": _("Files uploaded successfully!")}
