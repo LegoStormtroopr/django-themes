@@ -297,12 +297,12 @@ class UploadView(GenericAdminView, FormView):
         return reverse("admin:django_themes_theme_theme_editor", kwargs={'theme_id':self.theme.pk, 'path':self.path})
 
     def form_valid(self, form):
-        logger.debug('Uploaded via FORM')
         message = "Files uploaded successfully!"
 
-        f = form.cleaned_data['file_upload']
-        full_path = "/".join([self.theme.path, self.path, f.name])
-        default_theme_storage.save(full_path, f)
+        files = self.request.FILES.getlist('file_upload')
+        for f in files:
+            full_path = "/".join([self.theme.path, self.path, f.name])
+            default_theme_storage.save(full_path, f)
 
         messages.success(self.request, message)
 
@@ -312,17 +312,15 @@ class UploadAjaxView(GenericAdminView):
 
     def post(self, request, theme_id, path):
 
-        logger.debug('Uploaded via AJAX')
         try:
-            files = self.request.FILES.getlist('file_upload')
+            files = request.FILES.getlist('file_upload')
             for f in files:
-                logger.debug(f)
                 full_path = "/".join([self.theme.path, self.path, f.name])
                 default_theme_storage.save(full_path, f)
-            message = {"ok": _("Files uploaded successfully!")}
+            message = {"ok": "Files uploaded successfully!"}
             code = 200
-        except:
-            message = {"error": "WHAT"}
+        except Exception as e:
+            message = {"error": str(e)}
             code = 500
 
         return JsonResponse(message, status=code)
