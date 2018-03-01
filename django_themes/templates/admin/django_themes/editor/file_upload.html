@@ -57,11 +57,12 @@ Dropzone.autoDiscover = false;
 var my_dropzone = new Dropzone('#upload-dropzone', {
   paramName: "file_upload", // The name that will be used to transfer the file
   uploadMultiple: false,
+  createImageThumbnails: false,
   maxFilesize: 6, // MB
   addRemoveLinks: true,
   url: "{% url 'admin:admin_upload_ajax' theme.id path %}",
   autoProcessQueue: false,
-  forceFallback: true,
+
   init: function() {
     var myDropzone = this;
     this.element.querySelector("#upload_all_div").style.visibility = "visible"
