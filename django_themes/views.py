@@ -36,7 +36,7 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
     path = None
     path_and_parts = None
     template_name = None
-    title = None
+    title = ""
     filedata = None
 
     def dispatch(self, request, theme_id, path):
@@ -87,7 +87,7 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
             "theme": self.theme,
             "path": self.path,
             "paths": self.paths_and_parts,
-            "title": "| Theme Editor {theme.name}".format(theme=self.theme)
+            "title": "{title} | Theme Editor {theme.name}".format(theme=self.theme, title=self.title)
         })
 
         if (self.context_read_file and self.filedata):
@@ -195,11 +195,7 @@ class EditView(GenericAdminView, FormView):
     template_name = "admin/django_themes/editor/file_text_editor.html"
     context_read_file = True
     form_class = ThemeAdminFileForm
-
-    def get_context_data(self, **kwargs):
-        context = super(EditView, self).get_context_data(**kwargs)
-        context['title'] = "Editing File " + context['title']
-        return context
+    title = "Editing File"
 
     def get_initial(self):
         return {'path':self.path, 'file_editor': self.filedata['file']['contents']}
@@ -236,14 +232,12 @@ class DeleteView(GenericAdminView):
 
     template_name = "admin/django_themes/editor/file_delete.html"
     context_read_file = False
+    title = "Deleting File"
 
     def get(self, request, theme_id, path):
 
         self.context_read_file = True
-
         context = self.get_context_data()
-        context['title'] = "Deleting File " + context['title']
-
         return self.render_to_response(context)
 
     def post(self, request, theme_id, path):
@@ -260,11 +254,7 @@ class NewView(GenericAdminView, FormView):
 
     template_name = "admin/django_themes/editor/file_text_editor.html"
     form_class = ThemeAdminFileForm
-
-    def get_context_data(self, **kwargs):
-        context = super(NewView, self).get_context_data(**kwargs)
-        context['title'] = "Creating File " + context['title']
-        return context
+    title = "Creating File"
 
     def get_initial(self):
         return {'path':self.path+'/new_file', 'file_editor': ''}
@@ -294,11 +284,7 @@ class NewFolderView(GenericAdminView, FormView):
 
     template_name = "admin/django_themes/editor/folder_create.html"
     form_class = ThemeAdminFolderForm
-
-    def get_context_data(self, **kwargs):
-        context = super(NewFolderView, self).get_context_data(**kwargs)
-        context['title'] = "Creating Folder " + context['title']
-        return context
+    title = "Creating Folder"
 
     def get_success_url(self):
         return reverse("admin:django_themes_theme_theme_editor", kwargs={'theme_id':self.theme.pk, 'path':self.path})
@@ -320,14 +306,10 @@ class UploadView(GenericAdminView, FormView):
 
     template_name = "admin/django_themes/editor/file_upload.html"
     form_class = ThemeAdminUploadFileForm
+    title = "Upload File"
 
     def get_initial(self):
         return {'path':self.path+'/new_file', 'file_editor': ''}
-
-    def get_context_data(self, **kwargs):
-        context = super(UploadView, self).get_context_data(**kwargs)
-        context['title'] = "Upload File " + context['title']
-        return context
 
     def get_success_url(self):
         return reverse("admin:django_themes_theme_theme_editor", kwargs={'theme_id':self.theme.pk, 'path':self.path})
