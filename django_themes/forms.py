@@ -14,5 +14,8 @@ class ThemeAdminFileForm(forms.Form):
 
         return path
 
+class ThemeAdminFolderForm(forms.Form):
+    folder_name = forms.CharField()
+
 class ThemeAdminUploadFileForm(forms.Form):
     file_upload = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))

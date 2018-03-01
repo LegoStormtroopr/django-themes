@@ -25,6 +25,11 @@
             <a class="button" href="{% url 'admin:admin_new' theme.id path %}">
                 <i class="octicon octicon-trashcan"></i> Create new file
             </a>
+            {% if file_storage %}
+            <a class="button" href="{% url 'admin:admin_new_folder' theme.id path %}">
+                <i class="octicon octicon-trashcan"></i> Create new folder
+            </a>
+            {% endif %}
             <a class="button" href="{% url 'admin:admin_upload' theme.id path %}">
                 <i class="octicon octicon-cloud-upload"></i> Upload
             </a>

@@ -9,16 +9,18 @@ from django.contrib import messages
 from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.core.files.storage import FileSystemStorage
 # from .file_manager import FileManager
 
 from django_themes.storage import default_theme_storage
 from django_themes.models import Theme
 from django_themes.utils import sizeof_fmt
-from django_themes.forms import ThemeAdminFileForm, ThemeAdminUploadFileForm
+from django_themes.forms import ThemeAdminFileForm, ThemeAdminUploadFileForm, ThemeAdminFolderForm
 
 import posixpath
 import magic
 import base64
+import os
 # Admin views
 
 import logging
@@ -139,6 +141,15 @@ class ThemeAdminView(GenericAdminView):
         else:
             return self.render_file()
 
+    def get_context_data(self, **kwargs):
+        context = super(ThemeAdminView, self).get_context_data(**kwargs)
+        if isinstance(default_theme_storage, FileSystemStorage):
+            context['file_storage'] = True
+        else:
+            context['file_storage'] = False
+
+        return context
+
     def render_file(self):
 
         self.template_name = "admin/django_themes/editor/file_viewer.html"
@@ -250,7 +261,7 @@ class NewView(GenericAdminView, FormView):
     template_name = "admin/django_themes/editor/file_text_editor.html"
     form_class = ThemeAdminFileForm
 
-    def get_context_data(self, **kwarfs):
+    def get_context_data(self, **kwargs):
         context = super(NewView, self).get_context_data(**kwargs)
         context['title'] = "Creating File " + context['title']
         return context
@@ -264,7 +275,6 @@ class NewView(GenericAdminView, FormView):
     def form_valid(self, form):
 
         path = form.cleaned_data['path']
-        logger.debug('Cleaned data is :%s', form.cleaned_data)
         file_editor = form.cleaned_data['file_editor']
 
         if default_theme_storage.exists(path):
@@ -277,6 +287,32 @@ class NewView(GenericAdminView, FormView):
             fh.write(file_editor)
 
         messages.success(self.request, message)
+
+        return HttpResponseRedirect(self.get_success_url())
+
+class NewFolderView(GenericAdminView, FormView):
+
+    template_name = "admin/django_themes/editor/folder_create.html"
+    form_class = ThemeAdminFolderForm
+
+    def get_context_data(self, **kwargs):
+        context = super(NewFolderView, self).get_context_data(**kwargs)
+        context['title'] = "Creating Folder " + context['title']
+        return context
+
+    def get_success_url(self):
+        return reverse("admin:django_themes_theme_theme_editor", kwargs={'theme_id':self.theme.pk, 'path':self.path})
+
+    def form_valid(self, form):
+
+        folder_name = form.cleaned_data['folder_name']
+
+        full_path = "/".join([self.theme.path, self.path])
+        dirpath = default_theme_storage.path(full_path + folder_name)
+        logger.debug(dirpath)
+
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
 
         return HttpResponseRedirect(self.get_success_url())
 
