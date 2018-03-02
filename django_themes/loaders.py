@@ -47,12 +47,17 @@ class ThemeTemplateLoader(BaseLoader):
             # with open(origin.name, encoding=self.engine.file_charset) as fp:
             path = self.get_theme_template_path(origin.loader, origin.template_name)
             with default_theme_storage.open(path) as fp:
+                if fp is None:
+                    raise TemplateDoesNotExist(origin)
                 logger.debug("serving -- %s::%s" % (origin.loader.path, origin.template_name))
                 return fp.read()
         except IOError as e:
             if e.errno == errno.ENOENT:
                 raise TemplateDoesNotExist(origin)
             raise
+        except AttributeError as e:
+            raise TemplateDoesNotExist(origin)
+
 
     def get_template_sources(self, template_name):
         """
