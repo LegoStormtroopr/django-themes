@@ -32,6 +32,11 @@
         {% endif %}
         <div id="message"></div>
 
+        <div id="path_wrapper">
+        <label for="{{ form.path.id_for_label }}">Upload to directory</label>
+        {{ form.path }}
+        </div>
+
         <div class="fallback">
             {{ form.file_upload }}
             <div class="theme-editor submit-row">
@@ -62,6 +67,12 @@ var my_dropzone = new Dropzone('#upload-dropzone', {
   addRemoveLinks: true,
   url: "{% url 'admin:admin_upload_ajax' theme.id path %}",
   autoProcessQueue: false,
+  params: function(files, xhr, chunk) {
+    var path = document.getElementById('id_path').value
+    return {
+      "path": path
+    }
+  },
 
   init: function() {
     var myDropzone = this;

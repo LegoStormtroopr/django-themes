@@ -323,7 +323,7 @@ class UploadView(GenericAdminView, FormView):
     title = "Upload File"
 
     def get_initial(self):
-        return {'path':self.path+'/new_file', 'file_editor': ''}
+        return {'path':self.path, 'file_editor': ''}
 
     def get_success_url(self):
         return reverse("admin:django_themes_theme_theme_editor", kwargs={'theme_id':self.theme.pk, 'path':self.path})
@@ -333,7 +333,7 @@ class UploadView(GenericAdminView, FormView):
 
         files = self.request.FILES.getlist('file_upload')
         for f in files:
-            theme_path = self.join_theme_path(self.theme.path, self.path)
+            theme_path = self.join_theme_path(self.theme.path, form.cleaned_data['path'])
             full_path = os.path.join(theme_path, f.name)
             default_theme_storage.save(full_path, f)
 
@@ -344,11 +344,12 @@ class UploadView(GenericAdminView, FormView):
 class UploadAjaxView(GenericAdminView):
 
     def post(self, request, theme_id, path):
-
+        submitted_path = request.POST.get('path')
+        logger.debug('path: %s'%submitted_path)
         try:
             files = request.FILES.getlist('file_upload')
             for f in files:
-                theme_path = self.join_theme_path(self.theme.path, self.path)
+                theme_path = self.join_theme_path(self.theme.path, submitted_path)
                 full_path = os.path.join(theme_path, f.name)
                 default_theme_storage.save(full_path, f)
             message = {"ok": "Files uploaded successfully!"}
