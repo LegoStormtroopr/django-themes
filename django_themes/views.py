@@ -140,8 +140,10 @@ class ThemeAdminView(GenericAdminView):
             # If not directory but file exists
             _type = "file"
 
-        if _type == "folder" and files == []:
-            _type = "file"
+        # This is required for database_files since exeption will not be thrown above
+        if _type == "folder" and files == [] and folders == []:
+            if default_theme_storage.exists(full_path):
+                _type = "file"
 
         if  _type == "folder":
             return self.render_folder()
