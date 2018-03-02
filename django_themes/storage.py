@@ -12,13 +12,9 @@ class DefaultFileStorage(LazyObject):
     def _setup(self):
         self._wrapped = get_storage_class()(location=settings.THEMES_FILE_ROOT)
 
-class DefaultStorage(LazyObject):
-    def _setup(self):
-        self._wrapped = get_storage_class()()
-
 storage_class = get_storage_class()
 
 if issubclass(storage_class, FileSystemStorage):
     default_theme_storage = DefaultFileStorage()
 else:
-    default_theme_storage = DefaultStorage()
+    default_theme_storage = storage_class()
