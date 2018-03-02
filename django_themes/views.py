@@ -21,6 +21,7 @@ import posixpath
 import magic
 import base64
 import os
+import io
 # Admin views
 
 import logging
@@ -44,12 +45,16 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
         self.set_data(theme_id, path)
         return super(GenericAdminView, self).dispatch(request, theme_id, path)
 
+    def join_theme_path(self, theme_path, path):
+        full_path = os.path.join(theme_path, path.lstrip('/'))
+        return full_path
+
     def read_file(self):
 
         lines = 0
         contents = ''
 
-        with default_theme_storage.open("/".join([self.theme.path, self.path])) as fh:
+        with default_theme_storage.open(self.join_theme_path(self.theme.path, self.path)) as fh:
             contents = fh.read()
             mime = magic.from_buffer(contents, mime=True)
             filetype = mime.split('/')[0]
@@ -122,18 +127,20 @@ class ThemeAdminView(GenericAdminView):
 
     def get(self, request, theme_id, path):
 
-        full_path = "/".join([self.theme.path, self.path])
-        logger.debug('Full path: %s'%full_path)
+        full_path = self.join_theme_path(self.theme.path, self.path)
 
         try:
             # Try to list dir (check if folder)
-            default_theme_storage.listdir(full_path)
+            folders, files = default_theme_storage.listdir(full_path)
             _type = "folder"
         except:
             if not default_theme_storage.exists(full_path):
                 # If the path doesn't exist
                 return HttpResponse('No such directory %s/%s' % (settings.THEMES_FILE_ROOT, full_path))
             # If not directory but file exists
+            _type = "file"
+
+        if _type == "folder" and files == []:
             _type = "file"
 
         if  _type == "folder":
@@ -164,7 +171,7 @@ class ThemeAdminView(GenericAdminView):
 
         self.template_name = "admin/django_themes/editor/browser.html"
 
-        _folders, _files = default_theme_storage.listdir("/".join([self.theme.path, self.path]))
+        _folders, _files = default_theme_storage.listdir(self.join_theme_path(self.theme.path, self.path))
         folders = [{'name': folder, 'path': posixpath.join(self.path, folder)} for folder in _folders]
 
         if len(self.paths_and_parts) > 1:
@@ -175,13 +182,13 @@ class ThemeAdminView(GenericAdminView):
         files = []
 
         for file in _files:
-            fname = "/".join([self.theme.path, self.path, file])
+            fname = os.path.join(self.theme.path, self.path, file)
             fh = default_theme_storage.open(fname)
             files.append({
                     'name': file,
                     'path': posixpath.join(self.path, file),
                     'size': " ".join(sizeof_fmt(fh.size)),
-                    'modified': default_theme_storage.modified_time(fname)
+                    'modified': default_theme_storage.get_modified_time(fname)
                 })
 
         context = self.get_context_data()
@@ -215,16 +222,20 @@ class EditView(GenericAdminView, FormView):
         else:
             message = "File '%s' saved successfully!" % self.path
 
-        full_path = "/".join([self.theme.path, self.path])
+        full_path = self.join_theme_path(self.theme.path, self.path)
+        file_editor = form.cleaned_data['file_editor']
+
         if default_theme_storage.exists(full_path):
-            with default_theme_storage.open(full_path, 'w') as fh:
-                fh.write(form.cleaned_data['file_editor'])
+            default_theme_storage.delete(full_path)
+            file_editor_io = io.BytesIO(file_editor.encode('utf-8'))
+            default_theme_storage.save(full_path, file_editor_io)
         else:
-            default_theme_storage.save(full_path, ContentFile(form.cleaned_data['file_editor']))
+            file_editor_io = io.BytesIO(file_editor.encode('utf-8'))
+            default_theme_storage.save(full_path, file_editor_io)
 
         messages.success(self.request, message)
         if post_save_delete_path:
-            default_theme_storage.delete("/".join([self.theme.path, post_save_delete_path]))
+            default_theme_storage.delete(self.join_theme_path(self.theme.path, post_save_delete_path))
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -242,7 +253,7 @@ class DeleteView(GenericAdminView):
 
     def post(self, request, theme_id, path):
 
-        default_theme_storage.delete("/".join([self.theme.path, self.path]))
+        default_theme_storage.delete(self.join_theme_path(self.theme.path, self.path))
         message = "File '%s' deleted successfully!" % path
         messages.success(request, message)
         new_path = ''
@@ -272,9 +283,10 @@ class NewView(GenericAdminView, FormView):
 
         message = "File '%s' saved successfully!" % path
 
-        full_path = "/".join([self.theme.path, path])
-        with default_theme_storage.open(full_path, 'w') as fh:
-            fh.write(file_editor)
+        full_path = self.join_theme_path(self.theme.path, path)
+
+        file_editor_io = io.BytesIO(file_editor.encode('utf-8'))
+        default_theme_storage.save(full_path, file_editor_io)
 
         messages.success(self.request, message)
 
@@ -293,7 +305,7 @@ class NewFolderView(GenericAdminView, FormView):
 
         folder_name = form.cleaned_data['folder_name']
 
-        full_path = "/".join([self.theme.path, self.path])
+        full_path = self.join_theme_path(self.theme.path, self.path)
         dirpath = default_theme_storage.path(full_path + folder_name)
         logger.debug(dirpath)
 
@@ -319,7 +331,8 @@ class UploadView(GenericAdminView, FormView):
 
         files = self.request.FILES.getlist('file_upload')
         for f in files:
-            full_path = "/".join([self.theme.path, self.path, f.name])
+            theme_path = self.join_theme_path(self.theme.path, self.path)
+            full_path = os.path.join(theme_path, f.name)
             default_theme_storage.save(full_path, f)
 
         messages.success(self.request, message)
@@ -333,7 +346,8 @@ class UploadAjaxView(GenericAdminView):
         try:
             files = request.FILES.getlist('file_upload')
             for f in files:
-                full_path = "/".join([self.theme.path, self.path, f.name])
+                theme_path = self.join_theme_path(self.theme.path, self.path)
+                full_path = os.path.join(theme_path, f.name)
                 default_theme_storage.save(full_path, f)
             message = {"ok": "Files uploaded successfully!"}
             code = 200
