@@ -9,13 +9,13 @@ from django.core.exceptions import SuspiciousFileOperation
 from django.db.models import Q
 from django.template import Origin, TemplateDoesNotExist
 from django.utils._os import safe_join
-
-from django_themes.storage import default_theme_storage
-from django_themes.models import Theme
-
 from django.template.loaders.base import Loader as BaseLoader
 import posixpath
 
+from django_themes.middleware import get_current_user_key
+from django_themes.utils import get_previewing_themes
+from django_themes.storage import default_theme_storage
+from django_themes.models import Theme
 
 import logging
 
@@ -26,13 +26,12 @@ logger.debug("Logging started for " + __name__)
 class ThemeTemplateLoader(BaseLoader):
 
     def get_theme_template_path(self, theme, template_name):
-        logger.debug("trying -- %s (%s)::%s" % (theme.path, theme.order, template_name))
+        #logger.debug("trying -- %s (%s)::%s" % (theme.path, theme.order, template_name))
         path = posixpath.normpath(posixpath.join(theme.path, 'templates', template_name))
         return path
 
     def get_themes(self):
-        from django_themes.middleware import get_current_user_key
-        from django_themes.utils import get_previewing_themes
+
         user_key = get_current_user_key()
 
         preview_pks = []
@@ -45,11 +44,11 @@ class ThemeTemplateLoader(BaseLoader):
     def get_contents(self, origin):
         try:
             # with open(origin.name, encoding=self.engine.file_charset) as fp:
-            path = self.get_theme_template_path(origin.loader, origin.template_name)
+            path = origin.name
             with default_theme_storage.open(path) as fp:
                 if fp is None:
                     raise TemplateDoesNotExist(origin)
-                logger.debug("serving -- %s::%s" % (origin.loader.path, origin.template_name))
+                #logger.debug("serving -- %s::%s" % (path, origin.template_name))
                 return fp.read()
         except IOError as e:
             if e.errno == errno.ENOENT:
@@ -66,8 +65,11 @@ class ThemeTemplateLoader(BaseLoader):
         one of the template_dirs it is excluded from the result set.
         """
         for theme in self.get_themes():
-            yield Origin(
-                name=template_name,
-                template_name=template_name,
-                loader=theme
-            )
+            path = self.get_theme_template_path(theme, template_name)
+            if default_theme_storage.exists(path):
+                #logger.debug('Yeilding %s', path)
+                yield Origin(
+                    name=path,
+                    template_name=template_name,
+                    loader=self
+                )
