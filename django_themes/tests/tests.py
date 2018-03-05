@@ -7,6 +7,9 @@ from django_themes.models import Theme
 from django_themes.forms import ThemeAdminFileForm
 from django_themes.storage import get_storage_class
 
+from os.path import join as pathjoin
+from io import BytesIO
+
 class DjangoThemesTestCase(TestCase):
 
     def setUp(self):
@@ -22,6 +25,8 @@ class DjangoThemesTestCase(TestCase):
         self.su = User.objects.create_superuser('super', '', 'user')
         self.storage = get_storage_class()()
 
+    # ----------- Util Functions ---------------
+
     def login_superuser(self):
         self.client.logout()
         login_result = self.client.login(username='super', password='user')
@@ -33,12 +38,39 @@ class DjangoThemesTestCase(TestCase):
         self.assertEqual(post_response.status_code, 302)
 
         # Check that file was created
-        full_path = 'test' + filename
+        self.check_file_saved(filename, contents)
+
+    def upload_file(self, url, filename, path, contents):
+        # Post to upload page
+        testfile = BytesIO(contents.encode('utf-8'))
+        testfile.name = filename
+        post_response = self.client.post('/admin/django_themes/theme/1/files//upload', {'path': path, 'file_upload': testfile})
+        self.assertEqual(post_response.status_code, 302)
+
+        self.check_file_saved(path + filename, contents)
+
+    def check_file_saved(self, filename, contents):
+        # Check that file was created
+        full_path = pathjoin('test', filename.lstrip('/'))
         exists = self.storage.exists(full_path)
         self.assertTrue(exists)
         f = self.storage.open(full_path)
         file_contents = f.read()
         self.assertEqual(file_contents.decode('utf-8'), contents)
+
+    def check_render_folder(self, url, files, folders):
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['files']), files)
+        self.assertEqual(len(response.context['folders']), folders)
+
+    def create_file_in_folder(self):
+        self.login_superuser()
+
+        # Save and check file in directory
+        self.save_file('/admin/django_themes/theme/1/files//new', '/test/folder/file.txt', 'this is a test broadcast')
+
+    # -------------------- Tests -------------------------------
 
     def test_view_load(self):
         response = self.client.get('/test')
@@ -71,5 +103,81 @@ class DjangoThemesTestCase(TestCase):
         response = self.client.get('/admin/django_themes/theme/1/files//new')
         self.assertEqual(response.status_code, 200)
 
-        # Save file
+        # Save and check file
         self.save_file('/admin/django_themes/theme/1/files//new', '/myfile.txt', 'test message')
+
+    def test_render_folders(self):
+        self.login_superuser()
+
+        # Save files
+        self.save_file('/admin/django_themes/theme/1/files//new', '/myfile.txt', 'test message')
+        self.save_file('/admin/django_themes/theme/1/files//new', '/test/folder/file.txt', 'this is a test broadcast')
+
+        # Load base
+        self.check_render_folder('/admin/django_themes/theme/1/files/', 1, 1)
+
+        # Load /test, account for .. folder
+        self.check_render_folder('/admin/django_themes/theme/1/files/test', 0, 2)
+
+        # Load /test/folder, account for .. folder
+        self.check_render_folder('/admin/django_themes/theme/1/files/test/folder', 1, 1)
+
+    def test_render_file(self):
+        # Need to check mimetype filtering
+        self.login_superuser()
+        self.save_file('/admin/django_themes/theme/1/files//new', '/checkfile.txt', 'very nice message')
+
+        response = self.client.get('/admin/django_themes/theme/1/files/checkfile.txt')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['file']['contents'].decode('utf-8'), 'very nice message')
+        self.assertEqual(response.context['file']['lines'], 1)
+        self.assertEqual(response.context['file']['filetype'], 'text')
+
+    def test_edit_file(self):
+        self.login_superuser()
+        # Save test file
+        self.save_file('/admin/django_themes/theme/1/files//new', '/editfile.txt', 'please change this')
+
+        # Load edit page
+        response = self.client.get('/admin/django_themes/theme/1/files/editfile.txt/edit')
+        self.assertEqual(response.status_code, 200)
+
+        self.save_file('/admin/django_themes/theme/1/files/editfile.txt/edit', 'editfile.txt', 'we changed it')
+
+    def test_delete_file(self):
+        self.login_superuser()
+        # Save test file
+        self.save_file('/admin/django_themes/theme/1/files//new', '/deletefile.txt', 'we deleting this')
+
+        # Load delete page
+        response = self.client.get('/admin/django_themes/theme/1/files/deletefile.txt/delete')
+        self.assertEqual(response.status_code, 200)
+        # Post to delete page
+        post_response = self.client.post('/admin/django_themes/theme/1/files/deletefile.txt/delete')
+        self.assertEqual(post_response.status_code, 302)
+        # Check that the file was actually deleted
+        exists = self.storage.exists('test/deletefile.txt')
+        self.assertFalse(exists)
+
+    def test_upload_file(self):
+        self.login_superuser()
+        # Load upload page
+        response = self.client.get('/admin/django_themes/theme/1/files//upload')
+        self.assertEqual(response.status_code, 200)
+
+        # Post to upload page and check result
+        self.upload_file('/admin/django_themes/theme/1/files//upload', 'realfile.txt', '/', 'actual file data')
+
+    def test_upload_file_path(self):
+        # Testing uploading to a new path
+        self.login_superuser()
+
+        # Post to upload page and check result
+        self.upload_file('/admin/django_themes/theme/1/files//upload', 'realfile.txt', '/directory/', 'very good data')
+
+    def test_upload_file_ajax(self):
+        # Testing uploading to a new path
+        self.login_superuser()
+
+        # Post to upload page and check result
+        self.upload_file('/admin/django_themes/theme/1/files//ajax_upload', 'realfile.txt', '/', 'ajax file')
