@@ -106,7 +106,6 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
         return context
 
     def set_data(self, theme_id, path):
-        # permission_required('django_theme.change_theme')
         self.theme = get_object_or_404(Theme, pk=theme_id)
 
         self.opts = self.theme._meta
@@ -135,9 +134,7 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
             #template_name = path[end_index:]
             templates_list = TemplateEngine.get_default().template_loaders
             for t in templates_list:
-                logger.debug('looping templates list')
                 if isinstance(t, CachedLoader):
-                    logger.debug('got cached loader')
                     t.reset()
 
 class ThemeAdminView(GenericAdminView):
@@ -246,13 +243,10 @@ class EditView(GenericAdminView, FormView):
 
         if default_theme_storage.exists(full_path):
             default_theme_storage.delete(full_path)
-            file_editor_io = io.BytesIO(file_editor.encode('utf-8'))
-            self.clear_template_cache(full_path)
-            default_theme_storage.save(full_path, file_editor_io)
-        else:
-            file_editor_io = io.BytesIO(file_editor.encode('utf-8'))
-            self.clear_template_cache(full_path)
-            default_theme_storage.save(full_path, file_editor_io)
+
+        file_editor_io = io.BytesIO(file_editor.encode('utf-8'))
+        self.clear_template_cache(full_path)
+        default_theme_storage.save(full_path, file_editor_io)
 
         messages.success(self.request, message)
         if post_save_delete_path:
