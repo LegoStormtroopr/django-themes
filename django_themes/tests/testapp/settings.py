@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'django_themes',
     'database_files'
 ]
@@ -63,7 +64,7 @@ TEMPLATES = [
     },
 ]
 
-# WSGI_APPLICATION = 
+# WSGI_APPLICATION =
 
 
 # Database
@@ -117,3 +118,5 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 THEMES_FILE_STORAGE = 'database_files.storage.DatabaseStorage'
+
+#AUTH_USER_MODEL = 'django.contrib.auth.models.User'
