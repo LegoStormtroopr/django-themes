@@ -1,8 +1,9 @@
 from django.test import TestCase
 from django.test import Client
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
 from django.conf import settings
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
+from django.urls import reverse
 
 from django_themes.models import Theme
 from django_themes.forms import ThemeAdminFileForm
@@ -23,7 +24,7 @@ class DjangoThemesTestCase(TestCase):
             path='test',
             description='The greatest theme in the world'
         )
-        self.su = User.objects.create_superuser('super', '', 'user')
+        self.su = get_user_model().objects.create_superuser('super', '', 'user')
         self.storage = get_storage_class()()
 
     # ----------- Util Functions ---------------
@@ -77,10 +78,6 @@ class DjangoThemesTestCase(TestCase):
         response = self.client.get('/test')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'<p>Best View Ever</p>\n')
-
-    def test_user_exists(self):
-        count = User.objects.filter(username='super').count()
-        self.assertEqual(count, 1)
 
     def test_theme_edit_load(self):
         self.login_superuser()
@@ -217,6 +214,7 @@ class DjangoThemesTestCase(TestCase):
         self.assertEqual(response.content, b'<p>Updated Page</p>')
 
     def test_template_loading_multi_theme(self):
+        # Test template loading when a template is present in multiple themes
         self.login_superuser()
 
         secondtheme = Theme.objects.create(
@@ -243,3 +241,75 @@ class DjangoThemesTestCase(TestCase):
         response = self.client.get('/test')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'<p>Updated Page</p>')
+
+    def test_template_preview(self):
+        # Test template preview functionality
+        self.login_superuser()
+
+        # Make theme inactive
+        self.theme.is_active = False
+        self.theme.save()
+
+        # Save a template to the theme
+        self.save_file('/admin/django_themes/theme/1/files//new', '/templates/testapp/template1.html', '<p>Preview Page</p>', self.theme)
+
+        # Get theme view
+        get_response = self.client.get('/admin/django_themes/theme/')
+        self.assertEqual(get_response.status_code, 200)
+
+        # Post to change view, with theme selected to preview
+        postdata = {
+            'action': 'preview_themes',
+            ACTION_CHECKBOX_NAME: [self.theme.pk],
+        }
+        post_response = self.client.post('/admin/django_themes/theme/', postdata)
+        self.assertEqual(post_response.status_code, 302)
+
+        # Load test page to see if updated template was rendered
+        test_page_response = self.client.get('/test')
+        self.assertEqual(test_page_response.content, b'<p>Preview Page</p>')
+
+        # Post to change view, with theme selected to stop preview
+        postdata = {
+            'action': 'stop_preview',
+            ACTION_CHECKBOX_NAME: [self.theme.pk],
+        }
+        post_response2 = self.client.post('/admin/django_themes/theme/', postdata)
+        self.assertEqual(post_response2.status_code, 302)
+
+        # Load test page to see if original template was rendered
+        test_page_response = self.client.get('/test')
+        self.assertEqual(test_page_response.content, b'<p>Best View Ever</p>\n')
+
+    def test_template_preview_user(self):
+        # Test that only the user who selected to preview the theme is shown it's templates
+        self.login_superuser()
+
+        # Make theme inactive
+        self.theme.is_active = False
+        self.theme.save()
+
+        # Save a template to the theme
+        self.save_file('/admin/django_themes/theme/1/files//new', '/templates/testapp/template1.html', '<p>Preview Page</p>', self.theme)
+
+        # Post to change view, with theme selected to preview
+        postdata = {
+            'action': 'preview_themes',
+            ACTION_CHECKBOX_NAME: [self.theme.pk],
+        }
+        post_response = self.client.post('/admin/django_themes/theme/', postdata)
+        self.assertEqual(post_response.status_code, 302)
+
+        # Load test page to see if updated template was rendered
+        test_page_response = self.client.get('/test')
+        self.assertEqual(test_page_response.content, b'<p>Preview Page</p>')
+
+        # Login to different user
+        get_user_model().objects.create_user('regular', '', 'user')
+        self.client.logout()
+        login_result = self.client.login(username='regular', password='user')
+        self.assertTrue(login_result)
+
+        # Load test page to see if original template was rendered
+        test_page_response = self.client.get('/test')
+        self.assertEqual(test_page_response.content, b'<p>Best View Ever</p>\n')

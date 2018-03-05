@@ -19,7 +19,6 @@ from django_themes.storage import default_theme_storage
 from django_themes.models import Theme
 from django_themes.utils import sizeof_fmt
 from django_themes.forms import ThemeAdminFileForm, ThemeAdminUploadFileForm, ThemeAdminFolderForm
-
 import posixpath
 import magic
 import base64
