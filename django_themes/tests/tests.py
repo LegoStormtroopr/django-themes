@@ -32,26 +32,26 @@ class DjangoThemesTestCase(TestCase):
         login_result = self.client.login(username='super', password='user')
         self.assertEqual(login_result, True)
 
-    def save_file(self, url, filename, contents):
+    def save_file(self, url, filename, contents, theme):
         # Post new file form
         post_response = self.client.post(url, {'path': filename, 'file_editor': contents})
         self.assertEqual(post_response.status_code, 302)
 
         # Check that file was created
-        self.check_file_saved(filename, contents)
+        self.check_file_saved(filename, contents, theme)
 
-    def upload_file(self, url, filename, path, contents):
+    def upload_file(self, url, filename, path, contents, theme):
         # Post to upload page
         testfile = BytesIO(contents.encode('utf-8'))
         testfile.name = filename
         post_response = self.client.post('/admin/django_themes/theme/1/files//upload', {'path': path, 'file_upload': testfile})
         self.assertEqual(post_response.status_code, 302)
 
-        self.check_file_saved(path + filename, contents)
+        self.check_file_saved(path + filename, contents, theme)
 
-    def check_file_saved(self, filename, contents):
+    def check_file_saved(self, filename, contents, theme):
         # Check that file was created
-        full_path = pathjoin('test', filename.lstrip('/'))
+        full_path = pathjoin(theme.path, filename.lstrip('/'))
         exists = self.storage.exists(full_path)
         self.assertTrue(exists)
         f = self.storage.open(full_path)
@@ -68,7 +68,7 @@ class DjangoThemesTestCase(TestCase):
         self.login_superuser()
 
         # Save and check file in directory
-        self.save_file('/admin/django_themes/theme/1/files//new', '/test/folder/file.txt', 'this is a test broadcast')
+        self.save_file('/admin/django_themes/theme/1/files//new', '/test/folder/file.txt', 'this is a test broadcast', self.theme)
 
     # -------------------- Tests -------------------------------
 
@@ -104,14 +104,14 @@ class DjangoThemesTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Save and check file
-        self.save_file('/admin/django_themes/theme/1/files//new', '/myfile.txt', 'test message')
+        self.save_file('/admin/django_themes/theme/1/files//new', '/myfile.txt', 'test message', self.theme)
 
     def test_render_folders(self):
         self.login_superuser()
 
         # Save files
-        self.save_file('/admin/django_themes/theme/1/files//new', '/myfile.txt', 'test message')
-        self.save_file('/admin/django_themes/theme/1/files//new', '/test/folder/file.txt', 'this is a test broadcast')
+        self.save_file('/admin/django_themes/theme/1/files//new', '/myfile.txt', 'test message', self.theme)
+        self.save_file('/admin/django_themes/theme/1/files//new', '/test/folder/file.txt', 'this is a test broadcast', self.theme)
 
         # Load base
         self.check_render_folder('/admin/django_themes/theme/1/files/', 1, 1)
@@ -125,7 +125,7 @@ class DjangoThemesTestCase(TestCase):
     def test_render_file(self):
         # Need to check mimetype filtering
         self.login_superuser()
-        self.save_file('/admin/django_themes/theme/1/files//new', '/checkfile.txt', 'very nice message')
+        self.save_file('/admin/django_themes/theme/1/files//new', '/checkfile.txt', 'very nice message', self.theme)
 
         response = self.client.get('/admin/django_themes/theme/1/files/checkfile.txt')
         self.assertEqual(response.status_code, 200)
@@ -136,18 +136,18 @@ class DjangoThemesTestCase(TestCase):
     def test_edit_file(self):
         self.login_superuser()
         # Save test file
-        self.save_file('/admin/django_themes/theme/1/files//new', '/editfile.txt', 'please change this')
+        self.save_file('/admin/django_themes/theme/1/files//new', '/editfile.txt', 'please change this', self.theme)
 
         # Load edit page
         response = self.client.get('/admin/django_themes/theme/1/files/editfile.txt/edit')
         self.assertEqual(response.status_code, 200)
 
-        self.save_file('/admin/django_themes/theme/1/files/editfile.txt/edit', 'editfile.txt', 'we changed it')
+        self.save_file('/admin/django_themes/theme/1/files/editfile.txt/edit', 'editfile.txt', 'we changed it', self.theme)
 
     def test_delete_file(self):
         self.login_superuser()
         # Save test file
-        self.save_file('/admin/django_themes/theme/1/files//new', '/deletefile.txt', 'we deleting this')
+        self.save_file('/admin/django_themes/theme/1/files//new', '/deletefile.txt', 'we deleting this', self.theme)
 
         # Load delete page
         response = self.client.get('/admin/django_themes/theme/1/files/deletefile.txt/delete')
@@ -166,18 +166,47 @@ class DjangoThemesTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Post to upload page and check result
-        self.upload_file('/admin/django_themes/theme/1/files//upload', 'realfile.txt', '/', 'actual file data')
+        self.upload_file('/admin/django_themes/theme/1/files//upload', 'realfile.txt', '/', 'actual file data', self.theme)
 
     def test_upload_file_path(self):
         # Testing uploading to a new path
         self.login_superuser()
 
         # Post to upload page and check result
-        self.upload_file('/admin/django_themes/theme/1/files//upload', 'realfile.txt', '/directory/', 'very good data')
+        self.upload_file('/admin/django_themes/theme/1/files//upload', 'realfile.txt', '/directory/', 'very good data', self.theme)
 
     def test_upload_file_ajax(self):
         # Testing uploading to a new path
         self.login_superuser()
 
         # Post to upload page and check result
-        self.upload_file('/admin/django_themes/theme/1/files//ajax_upload', 'realfile.txt', '/', 'ajax file')
+        self.upload_file('/admin/django_themes/theme/1/files//ajax_upload', 'realfile.txt', '/', 'ajax file', self.theme)
+
+    def test_template_loading(self):
+        self.login_superuser()
+        # Save test file
+        self.save_file('/admin/django_themes/theme/1/files//new', '/templates/testapp/template1.html', '<p>Updated Page</p>', self.theme)
+
+        response = self.client.get('/test')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'<p>Updated Page</p>')
+
+    def test_template_loading_multi_theme(self):
+        self.login_superuser()
+
+        secondtheme = Theme.objects.create(
+            order=2,
+            is_active=True,
+            author='New Author',
+            name='New Theme',
+            version='1.2.3',
+            path='new',
+            description='The greatest theme in the world'
+        )
+
+        self.save_file('/admin/django_themes/theme/1/files//new', '/templates/testapp/template1.html', '<p>Updated Page</p>', self.theme)
+        self.save_file('/admin/django_themes/theme/2/files//new', '/templates/testapp/template1.html', '<p>Brand New Page</p>', secondtheme)
+
+        response = self.client.get('/test')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'<p>Brand New Page</p>')
