@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.test import Client
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -7,10 +7,12 @@ from django.urls import reverse
 
 from django_themes.models import Theme
 from django_themes.forms import ThemeAdminFileForm
-from django_themes.storage import get_storage_class
+from django_themes.storage import default_theme_storage
 
 from os.path import join as pathjoin
 from io import BytesIO
+import glob
+import os
 
 class DjangoThemesTestCase(TestCase):
 
@@ -25,7 +27,7 @@ class DjangoThemesTestCase(TestCase):
             description='The greatest theme in the world'
         )
         self.su = get_user_model().objects.create_superuser('super', '', 'user')
-        self.storage = get_storage_class()()
+        self.storage = default_theme_storage
 
     # ----------- Util Functions ---------------
 
@@ -313,3 +315,14 @@ class DjangoThemesTestCase(TestCase):
         # Load test page to see if original template was rendered
         test_page_response = self.client.get('/test')
         self.assertEqual(test_page_response.content, b'<p>Best View Ever</p>\n')
+
+
+@override_settings(THEMES_FILE_STORAGE='django.core.files.storage.FileSystemStorage')
+class DjangoThemesFilesystemTestCase(DjangoThemesTestCase):
+    # Run the same tests using file system storage
+
+    def tearDown(self):
+        # Delete all files in directory after each test
+        files = glob.glob(settings.THEMES_FILE_ROOT + '/*')
+        for f in files:
+            os.remove(f)

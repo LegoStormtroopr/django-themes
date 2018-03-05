@@ -118,5 +118,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 THEMES_FILE_STORAGE = 'database_files.storage.DatabaseStorage'
+THEMES_FILE_ROOT = os.path.join(BASE_DIR, "files")
 
 #AUTH_USER_MODEL = 'django.contrib.auth.models.User'
