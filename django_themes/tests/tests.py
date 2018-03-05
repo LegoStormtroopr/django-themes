@@ -93,9 +93,19 @@ class DjangoThemesTestCase(TestCase):
 
     def test_create_file_form(self):
         # Test ThemeAdminFileForm
+
+        # Test with good data
         data = {'path': '/myfile.txt', 'file_editor': 'test message'}
         form = ThemeAdminFileForm(data=data)
         self.assertTrue(form.is_valid())
+        # Test with .. in filename
+        data = {'path': '/wow/../myfile.txt', 'file_editor': 'test message'}
+        form = ThemeAdminFileForm(data=data)
+        self.assertFalse(form.is_valid())
+        # Test with directory instead of file
+        data = {'path': '/good/one/', 'file_editor': 'test message'}
+        form = ThemeAdminFileForm(data=data)
+        self.assertFalse(form.is_valid())
 
     def test_create_file(self):
         # Get new file form
@@ -204,9 +214,17 @@ class DjangoThemesTestCase(TestCase):
             description='The greatest theme in the world'
         )
 
+        # Save the template in 2 different themes
         self.save_file('/admin/django_themes/theme/1/files//new', '/templates/testapp/template1.html', '<p>Updated Page</p>', self.theme)
         self.save_file('/admin/django_themes/theme/2/files//new', '/templates/testapp/template1.html', '<p>Brand New Page</p>', secondtheme)
-
+        # Check that the theme with higher order was used
         response = self.client.get('/test')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'<p>Brand New Page</p>')
+        # Set second theme to inactive
+        secondtheme.is_active=False
+        secondtheme.save()
+        # Check first theme used
+        response = self.client.get('/test')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'<p>Updated Page</p>')
