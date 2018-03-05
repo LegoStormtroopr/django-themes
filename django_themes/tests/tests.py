@@ -203,7 +203,7 @@ class DjangoThemesTestCase(TestCase):
 
         response = self.client.get('/admin/django_themes/theme/1/files/testimage.png')
         self.assertEqual(response.status_code, 200)
-        #self.assertTrue(response.context['file']['contents'].decode('utf-8').startswith('data:'))
+        self.assertTrue(response.context['file']['contents'].startswith('data:'))
         self.assertEqual(response.context['file']['lines'], 0)
         self.assertEqual(response.context['file']['filetype'], 'image')
 
