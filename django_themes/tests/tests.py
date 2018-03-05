@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.test import Client
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
+from django.conf import settings
 
 from django_themes.models import Theme
 from django_themes.forms import ThemeAdminFileForm
@@ -191,6 +192,20 @@ class DjangoThemesTestCase(TestCase):
 
         # Post to upload page and check result
         self.upload_file('/admin/django_themes/theme/1/files//ajax_upload', 'realfile.txt', '/', 'ajax file', self.theme)
+
+    def test_upload_view_image(self):
+        self.login_superuser()
+
+        # Post to upload page and check result
+        with open(pathjoin(settings.BASE_DIR, 'testimage.png'), mode='rb') as fp:
+            post_response = self.client.post('/admin/django_themes/theme/1/files//upload', {'path': '/', 'file_upload': fp})
+        self.assertEqual(post_response.status_code, 302)
+
+        response = self.client.get('/admin/django_themes/theme/1/files/testimage.png')
+        self.assertEqual(response.status_code, 200)
+        #self.assertTrue(response.context['file']['contents'].decode('utf-8').startswith('data:'))
+        self.assertEqual(response.context['file']['lines'], 0)
+        self.assertEqual(response.context['file']['filetype'], 'image')
 
     def test_template_loading(self):
         self.login_superuser()
