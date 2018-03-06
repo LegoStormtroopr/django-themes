@@ -15,7 +15,7 @@ from django.template.loaders.cached import Loader as CachedLoader
 from django.template.engine import Engine as TemplateEngine
 # from .file_manager import FileManager
 
-from django_themes.storage import default_theme_storage
+from django_themes.storage import default_theme_storage, encoding
 from django_themes.models import Theme
 from django_themes.utils import sizeof_fmt
 from django_themes.forms import ThemeAdminFileForm, ThemeAdminUploadFileForm, ThemeAdminFolderForm
@@ -243,7 +243,7 @@ class EditView(GenericAdminView, FormView):
         if default_theme_storage.exists(full_path):
             default_theme_storage.delete(full_path)
 
-        file_editor_io = io.BytesIO(file_editor.encode('utf-8'))
+        file_editor_io = io.BytesIO(file_editor.encode(encoding))
         self.clear_template_cache(full_path)
         default_theme_storage.save(full_path, file_editor_io)
 
@@ -299,7 +299,7 @@ class NewView(GenericAdminView, FormView):
         if default_theme_storage.exists(full_path):
             return HttpResponse('already exists')
 
-        file_editor_io = io.BytesIO(file_editor.encode('utf-8'))
+        file_editor_io = io.BytesIO(file_editor.encode(encoding))
         self.clear_template_cache(full_path)
         default_theme_storage.save(full_path, file_editor_io)
 

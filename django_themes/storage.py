@@ -16,3 +16,4 @@ def get_theme_storage():
         return storage_class()
 
 default_theme_storage = get_theme_storage()
+encoding = 'utf-8'

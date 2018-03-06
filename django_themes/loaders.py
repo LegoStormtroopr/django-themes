@@ -14,7 +14,7 @@ import posixpath
 
 from django_themes.middleware import get_current_user_key
 from django_themes.utils import get_previewing_themes
-from django_themes.storage import default_theme_storage
+from django_themes.storage import default_theme_storage, encoding
 from django_themes.models import Theme
 
 import logging
@@ -49,7 +49,7 @@ class ThemeTemplateLoader(BaseLoader):
                 if fp is None:
                     raise TemplateDoesNotExist(origin)
                 #logger.debug("serving -- %s::%s" % (path, origin.template_name))
-                return fp.read().decode('utf-8')
+                return fp.read().decode(encoding)
         except IOError as e:
             if e.errno == errno.ENOENT:
                 raise TemplateDoesNotExist(origin)

@@ -8,7 +8,7 @@ from django.core.files.storage import FileSystemStorage
 
 from django_themes.models import Theme
 from django_themes.forms import ThemeAdminFileForm
-from django_themes.storage import get_theme_storage
+from django_themes.storage import get_theme_storage, encoding
 
 from os.path import join as pathjoin
 from io import BytesIO
@@ -48,7 +48,7 @@ class DjangoThemesTestCase(TestCase):
 
     def upload_file(self, url, filename, path, contents, theme):
         # Post to upload page
-        testfile = BytesIO(contents.encode('utf-8'))
+        testfile = BytesIO(contents.encode(encoding))
         testfile.name = filename
         post_response = self.client.post('/admin/django_themes/theme/1/files//upload', {'path': path, 'file_upload': testfile})
         self.assertEqual(post_response.status_code, 302)
@@ -62,7 +62,7 @@ class DjangoThemesTestCase(TestCase):
         self.assertTrue(exists)
         f = self.storage.open(full_path)
         file_contents = f.read()
-        self.assertEqual(file_contents.decode('utf-8'), contents)
+        self.assertEqual(file_contents.decode(encoding), contents)
 
     def check_render_folder(self, url, files, folders):
         response = self.client.get(url)
@@ -151,7 +151,7 @@ class DjangoThemesTestCase(TestCase):
 
         response = self.client.get('/admin/django_themes/theme/1/files/checkfile.txt')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['file']['contents'].decode('utf-8'), 'very nice message')
+        self.assertEqual(response.context['file']['contents'].decode(encoding), 'very nice message')
         self.assertEqual(response.context['file']['lines'], 1)
         self.assertEqual(response.context['file']['filetype'], 'text')
 
