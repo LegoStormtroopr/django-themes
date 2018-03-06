@@ -49,7 +49,7 @@ class ThemeTemplateLoader(BaseLoader):
                 if fp is None:
                     raise TemplateDoesNotExist(origin)
                 #logger.debug("serving -- %s::%s" % (path, origin.template_name))
-                return fp.read()
+                return fp.read().decode('utf-8')
         except IOError as e:
             if e.errno == errno.ENOENT:
                 raise TemplateDoesNotExist(origin)
