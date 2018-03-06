@@ -9,6 +9,7 @@ from django.core.files.storage import FileSystemStorage
 from django_themes.models import Theme
 from django_themes.forms import ThemeAdminFileForm
 from django_themes.storage import get_theme_storage, encoding
+from django_themes.utils import clear_template_cache
 
 from os.path import join as pathjoin
 from io import BytesIO
@@ -329,6 +330,8 @@ class DjangoThemesTestCase(TestCase):
         self.assertEqual(test_page_response.content, b'<p>Best View Ever</p>\n')
 
     def tearDown(self):
+        # Clear cached loader cache
+        # clear_template_cache()
         # If using filesystem storage
         if isinstance(self.storage, FileSystemStorage):
             # Delete all files in directory after each test

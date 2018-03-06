@@ -1,4 +1,6 @@
 from django.core.cache import cache
+from django.template.engine import Engine as TemplateEngine
+from django.template.loaders.cached import Loader as CachedLoader
 
 THEME_CACHE_KEY_PREFIX = "django_themes__"
 
@@ -45,3 +47,10 @@ def sizeof_fmt(num, suffix='B'):
             return ("%.2f"%num, unit+suffix)
         num /= 1024.0
     return  ("%.2f"%num, 'Yi'+suffix)
+
+def clear_template_cache():
+
+    templates_list = TemplateEngine.get_default().template_loaders
+    for t in templates_list:
+        if isinstance(t, CachedLoader):
+            t.reset()

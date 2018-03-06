@@ -43,6 +43,16 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'django_themes.tests.testapp.urls'
 
+TEMPLATE_LOADERS = [
+    'django_themes.loaders.ThemeTemplateLoader',
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader'
+    ]
+
+CACHED_LOADER = os.getenv('CACHED_LOADER', 0)
+if int(CACHED_LOADER) == 1:
+    TEMPLATE_LOADERS = [('django.template.loaders.cached.Loader', TEMPLATE_LOADERS)]
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -55,11 +65,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
-            'loaders': [
-                'django_themes.loaders.ThemeTemplateLoader',
-                'django.template.loaders.filesystem.Loader',
-                'django.template.loaders.app_directories.Loader'
-            ]
+            'loaders': TEMPLATE_LOADERS
         },
     },
 ]

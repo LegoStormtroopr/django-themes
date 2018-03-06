@@ -10,14 +10,10 @@ from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.files.storage import FileSystemStorage
-from django.template.loaders.cached import Loader as CachedLoader
-
-from django.template.engine import Engine as TemplateEngine
-# from .file_manager import FileManager
 
 from django_themes.storage import default_theme_storage, encoding
 from django_themes.models import Theme
-from django_themes.utils import sizeof_fmt
+from django_themes.utils import sizeof_fmt, clear_template_cache
 from django_themes.forms import ThemeAdminFileForm, ThemeAdminUploadFileForm, ThemeAdminFolderForm
 import posixpath
 import magic
@@ -123,18 +119,12 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
         if (self.context_read_file):
             self.filedata = self.read_file()
 
-    def clear_template_cache(self, path):
-        # Clears the template cahce when new template uploaded
-        # Or when a template is deleted
+    def check_path(self, path):
+        # If path includes the templates directory, clear the template cache
         search_string = 'templates/'
         index = path.find(search_string)
         if index != -1:
-            #end_index = index + len(search_string)
-            #template_name = path[end_index:]
-            templates_list = TemplateEngine.get_default().template_loaders
-            for t in templates_list:
-                if isinstance(t, CachedLoader):
-                    t.reset()
+            clear_template_cache()
 
 class ThemeAdminView(GenericAdminView):
 
@@ -244,7 +234,7 @@ class EditView(GenericAdminView, FormView):
             default_theme_storage.delete(full_path)
 
         file_editor_io = io.BytesIO(file_editor.encode(encoding))
-        self.clear_template_cache(full_path)
+        self.check_path(full_path)
         default_theme_storage.save(full_path, file_editor_io)
 
         messages.success(self.request, message)
@@ -300,7 +290,7 @@ class NewView(GenericAdminView, FormView):
             return HttpResponse('already exists')
 
         file_editor_io = io.BytesIO(file_editor.encode(encoding))
-        self.clear_template_cache(full_path)
+        self.check_path(full_path)
         default_theme_storage.save(full_path, file_editor_io)
 
         messages.success(self.request, message)
@@ -348,7 +338,7 @@ class UploadView(GenericAdminView, FormView):
         for f in files:
             theme_path = self.join_theme_path(self.theme.path, form.cleaned_data['path'])
             full_path = os.path.join(theme_path, f.name)
-            self.clear_template_cache(full_path)
+            self.check_path(full_path)
             default_theme_storage.save(full_path, f)
 
         messages.success(self.request, message)
@@ -365,7 +355,7 @@ class UploadAjaxView(GenericAdminView):
             for f in files:
                 theme_path = self.join_theme_path(self.theme.path, submitted_path)
                 full_path = os.path.join(theme_path, f.name)
-                self.clear_template_cache(full_path)
+                self.check_path(full_path)
                 default_theme_storage.save(full_path, f)
             message = {"ok": "Files uploaded successfully!"}
             code = 200
