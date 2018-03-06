@@ -292,12 +292,12 @@ class NewView(GenericAdminView, FormView):
         path = form.cleaned_data['path']
         file_editor = form.cleaned_data['file_editor']
 
-        if default_theme_storage.exists(path):
-            raise Error
-
         message = "File '%s' saved successfully!" % path
 
         full_path = self.join_theme_path(self.theme.path, path)
+
+        if default_theme_storage.exists(full_path):
+            return HttpResponse('already exists')
 
         file_editor_io = io.BytesIO(file_editor.encode('utf-8'))
         self.clear_template_cache(full_path)

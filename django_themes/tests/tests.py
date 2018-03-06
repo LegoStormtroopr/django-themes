@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.urls import reverse
+from django.core.files.storage import FileSystemStorage
 
 from django_themes.models import Theme
 from django_themes.forms import ThemeAdminFileForm
@@ -27,6 +28,7 @@ class DjangoThemesTestCase(TestCase):
             description='The greatest theme in the world'
         )
         self.su = get_user_model().objects.create_superuser('super', '', 'user')
+        # Ensure the test is always using the correct storage
         self.storage = get_theme_storage()
 
     # ----------- Util Functions ---------------
@@ -82,7 +84,13 @@ class DjangoThemesTestCase(TestCase):
         self.assertEqual(response.content, b'<p>Best View Ever</p>\n')
 
     def test_theme_edit_load(self):
+
+        # Test not logged in
+        response = self.client.get('/admin/django_themes/theme/1/change/')
+        self.assertEqual(response.status_code, 302)
+
         self.login_superuser()
+        # Test logged in
         response = self.client.get('/admin/django_themes/theme/1/change/')
         self.assertEqual(response.status_code, 200)
 
@@ -108,8 +116,12 @@ class DjangoThemesTestCase(TestCase):
         self.assertFalse(form.is_valid())
 
     def test_create_file(self):
-        # Get new file form
+        # Get new file form without login
+        response = self.client.get('/admin/django_themes/theme/1/files//new')
+        self.assertEqual(response.status_code, 302)
+
         self.login_superuser()
+        # get new file for while logged in
         response = self.client.get('/admin/django_themes/theme/1/files//new')
         self.assertEqual(response.status_code, 200)
 
@@ -317,25 +329,8 @@ class DjangoThemesTestCase(TestCase):
         self.assertEqual(test_page_response.content, b'<p>Best View Ever</p>\n')
 
     def tearDown(self):
-        # Delete all files in directory after each test
-        shutil.rmtree(settings.THEMES_FILE_ROOT)
-        os.mkdir(settings.THEMES_FILE_ROOT)
-
-# @override_settings(THEMES_FILE_STORAGE='django.core.files.storage.FileSystemStorage')
-# class DjangoThemesFilesystemTestCase(DjangoThemesTestCase):
-#     # Run the same tests using file system storage
-#
-#     def tearDown(self):
-#         # Delete all files in directory after each test
-#         files = glob.glob(settings.THEMES_FILE_ROOT + '/*')
-#         for f in files:
-#             os.remove(f)
-#
-#     def test_create_folder(self):
-#
-#         self.login_superuser()
-#
-#         self.client.post('/admin/django_themes/theme/1/files//create_folder', {'folder_name': 'testfolder'})
-#         full_path = pathjoin(theme.path, 'testfolder')
-#         exists = self.storage.exists(full_path)
-#         self.assertTrue(exists)
+        # If using filesystem storage
+        if isinstance(self.storage, FileSystemStorage):
+            # Delete all files in directory after each test
+            shutil.rmtree(settings.THEMES_FILE_ROOT)
+            os.mkdir(settings.THEMES_FILE_ROOT)
