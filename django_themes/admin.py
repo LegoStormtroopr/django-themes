@@ -18,7 +18,6 @@ from django.utils.decorators import method_decorator
 
 from django_themes.models import Theme
 from django_themes.utils import add_theme_to_preview, get_previewing_themes, set_themes_to_preview, sizeof_fmt, unset_preview_themes
-from django_themes.storage import default_theme_storage
 from django_themes.views import ThemeAdminView, EditView, DeleteView, NewView, UploadView, UploadAjaxView, NewFolderView
 
 
