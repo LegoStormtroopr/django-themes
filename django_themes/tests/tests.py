@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from django_themes.models import Theme
 from django_themes.forms import ThemeAdminFileForm
-from django_themes.storage import default_theme_storage
+from django_themes.storage import get_theme_storage
 
 from os.path import join as pathjoin
 from io import BytesIO
@@ -27,7 +27,8 @@ class DjangoThemesTestCase(TestCase):
             description='The greatest theme in the world'
         )
         self.su = get_user_model().objects.create_superuser('super', '', 'user')
-        self.storage = default_theme_storage
+        self.storage = get_theme_storage()
+        print(self.storage)
 
     # ----------- Util Functions ---------------
 
