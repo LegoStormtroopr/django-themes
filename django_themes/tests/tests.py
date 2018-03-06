@@ -68,13 +68,13 @@ class DjangoThemesTestCase(TestCase):
         self.assertEqual(len(response.context['files']), files)
         self.assertEqual(len(response.context['folders']), folders)
 
-    def create_file_in_folder(self):
+    # -------------------- Tests -------------------------------
+
+    def test_create_file_in_folder(self):
         self.login_superuser()
 
         # Save and check file in directory
         self.save_file('/admin/django_themes/theme/1/files//new', '/test/folder/file.txt', 'this is a test broadcast', self.theme)
-
-    # -------------------- Tests -------------------------------
 
     def test_view_load(self):
         response = self.client.get('/test')
@@ -321,8 +321,22 @@ class DjangoThemesTestCase(TestCase):
 class DjangoThemesFilesystemTestCase(DjangoThemesTestCase):
     # Run the same tests using file system storage
 
+    # @classmethod
+    # def setUpClass(cls):
+    #     super().setUpClass()
+    #     Storage.set_theme_storage()
+
     def tearDown(self):
         # Delete all files in directory after each test
         files = glob.glob(settings.THEMES_FILE_ROOT + '/*')
         for f in files:
             os.remove(f)
+
+    def test_create_folder(self):
+
+        self.login_superuser()
+
+        self.client.post('/admin/django_themes/theme/1/files//create_folder', {'folder_name': 'testfolder'})
+        full_path = pathjoin(theme.path, 'testfolder')
+        exists = self.storage.exists(full_path)
+        self.assertTrue(exists)
