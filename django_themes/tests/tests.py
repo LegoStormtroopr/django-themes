@@ -114,6 +114,21 @@ class DjangoThemesTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse('No such directory' in str(response.content))
 
+    def test_save_theme_invalid_path(self):
+        self.login_superuser()
+
+        data = {
+            'author': 'Another Author',
+            'name': 'Good Name',
+            'path': '../../another',
+            'is_active': 'on',
+            'order': '2'
+        }
+        post_response = self.client.post('/admin/django_themes/theme/1/change/', data)
+
+        response = self.client.get('/admin/django_themes/theme/1/files/')
+        self.assertEqual(response.status_code, 404)
+
     def test_create_file_form(self):
         # Test ThemeAdminFileForm
 
