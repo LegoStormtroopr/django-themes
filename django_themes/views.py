@@ -9,7 +9,6 @@ from django.contrib import messages
 from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.core.files.storage import FileSystemStorage
 
 from django_themes.storage import default_theme_storage, encoding
 from django_themes.models import Theme
@@ -153,15 +152,6 @@ class ThemeAdminView(GenericAdminView):
         else:
             return self.render_file()
 
-    def get_context_data(self, **kwargs):
-        context = super(ThemeAdminView, self).get_context_data(**kwargs)
-        if isinstance(default_theme_storage, FileSystemStorage):
-            context['file_storage'] = True
-        else:
-            context['file_storage'] = False
-
-        return context
-
     def render_file(self):
 
         self.template_name = "admin/django_themes/editor/file_viewer.html"
@@ -294,28 +284,6 @@ class NewView(GenericAdminView, FormView):
         default_theme_storage.save(full_path, file_editor_io)
 
         messages.success(self.request, message)
-
-        return HttpResponseRedirect(self.get_success_url())
-
-class NewFolderView(GenericAdminView, FormView):
-
-    template_name = "admin/django_themes/editor/folder_create.html"
-    form_class = ThemeAdminFolderForm
-    title = "Creating Folder"
-
-    def get_success_url(self):
-        return reverse("admin:django_themes_theme_theme_editor", kwargs={'theme_id':self.theme.pk, 'path':self.path})
-
-    def form_valid(self, form):
-
-        folder_name = form.cleaned_data['folder_name']
-
-        full_path = self.join_theme_path(self.theme.path, self.path)
-        dirpath = default_theme_storage.path(full_path + folder_name)
-        logger.debug(dirpath)
-
-        if not os.path.exists(dirpath):
-            os.makedirs(dirpath)
 
         return HttpResponseRedirect(self.get_success_url())
 

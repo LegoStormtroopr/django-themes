@@ -18,7 +18,7 @@ from django.utils.decorators import method_decorator
 
 from django_themes.models import Theme
 from django_themes.utils import add_theme_to_preview, get_previewing_themes, set_themes_to_preview, sizeof_fmt, unset_preview_themes
-from django_themes.views import ThemeAdminView, EditView, DeleteView, NewView, UploadView, UploadAjaxView, NewFolderView
+from django_themes.views import ThemeAdminView, EditView, DeleteView, NewView, UploadView, UploadAjaxView
 
 
 class ThemeAdminForm(forms.ModelForm):
@@ -90,7 +90,6 @@ class ThemeAdmin(admin.ModelAdmin):
             url("^(?P<theme_id>[^/]+)/files/(?P<path>.*?)/new", admin_site.admin_view(NewView.as_view()), name='admin_new'),
             url("^(?P<theme_id>[^/]+)/files/(?P<path>.*?)/upload", admin_site.admin_view(UploadView.as_view()), name='admin_upload'),
             url("^(?P<theme_id>[^/]+)/files/(?P<path>.*?)/ajax_upload", admin_site.admin_view(UploadAjaxView.as_view()), name='admin_upload_ajax'),
-            url("^(?P<theme_id>[^/]+)/files/(?P<path>.*?)/create_folder", admin_site.admin_view(NewFolderView.as_view()), name='admin_new_folder'),
             url("^(?P<theme_id>[^/]+)/files/(?P<path>.*?)$", admin_site.admin_view(ThemeAdminView.as_view()), name='%s_%s_theme_editor' % info),
         ]
         return theme_edit_urls + urls
