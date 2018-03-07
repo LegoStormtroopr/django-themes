@@ -4,12 +4,11 @@ from django.views.generic import TemplateView, FormView, View
 from django.views.generic.base import ContextMixin
 from django.shortcuts import get_object_or_404
 from django.utils.text import capfirst
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.contrib import messages
 from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.utils._os import safe_join
 
 from django_themes.storage import default_theme_storage, encoding
 from django_themes.models import Theme
@@ -44,7 +43,9 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
         return super(GenericAdminView, self).dispatch(request, theme_id, path)
 
     def join_theme_path(self, theme_path, path):
-        full_path = safe_join(theme_path, path.lstrip('/'))
+        full_path = os.path.join(theme_path, path.lstrip('/'))
+        if '..' in full_path:
+            raise Http404("Illegal Path")
         return full_path
 
     def read_file(self):
@@ -141,7 +142,7 @@ class ThemeAdminView(GenericAdminView):
         if path:
             # If a system path does not exist
             if not default_theme_storage.exists(path):
-                return HttpResponse('No such directory %s'%path)
+                raise Http404('No such directory')
             # If we have a system path can use os.path.isdir to decide
             if os.path.isdir(path):
                 _type = "folder"
@@ -189,7 +190,7 @@ class ThemeAdminView(GenericAdminView):
         files = []
 
         for file in _files:
-            fname = safe_join(self.theme.path, self.path, file)
+            fname = os.path.join(self.theme.path, self.path, file)
             fh = default_theme_storage.open(fname)
             files.append({
                     'name': file,
@@ -285,7 +286,6 @@ class NewView(GenericAdminView, FormView):
         file_editor = form.cleaned_data['file_editor']
 
         message = "File '%s' saved successfully!" % path
-
         full_path = self.join_theme_path(self.theme.path, path)
 
         if default_theme_storage.exists(full_path):
@@ -317,7 +317,7 @@ class UploadView(GenericAdminView, FormView):
         files = self.request.FILES.getlist('file_upload')
         for f in files:
             theme_path = self.join_theme_path(self.theme.path, form.cleaned_data['path'])
-            full_path = safe_join(theme_path, f.name)
+            full_path = os.path.join(theme_path, f.name)
             self.check_path(full_path)
             default_theme_storage.save(full_path, f)
 
@@ -334,7 +334,7 @@ class UploadAjaxView(GenericAdminView):
             files = request.FILES.getlist('file_upload')
             for f in files:
                 theme_path = self.join_theme_path(self.theme.path, submitted_path)
-                full_path = safe_join(theme_path, f.name)
+                full_path = os.path.join(theme_path, f.name)
                 self.check_path(full_path)
                 default_theme_storage.save(full_path, f)
             message = {"ok": "Files uploaded successfully!"}
