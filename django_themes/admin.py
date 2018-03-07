@@ -1,4 +1,5 @@
 import posixpath
+import os
 
 from django import forms
 from django.conf.urls import url
@@ -19,7 +20,7 @@ from django.utils.decorators import method_decorator
 from django_themes.models import Theme
 from django_themes.utils import add_theme_to_preview, get_previewing_themes, set_themes_to_preview, sizeof_fmt, unset_preview_themes
 from django_themes.views import ThemeAdminView, EditView, DeleteView, NewView, UploadView, UploadAjaxView
-
+from django_themes.storage import default_theme_storage
 
 class ThemeAdminForm(forms.ModelForm):
 
@@ -94,7 +95,16 @@ class ThemeAdmin(admin.ModelAdmin):
         ]
         return theme_edit_urls + urls
 
-    themes_folder_template = "admin/django_themes/editor/browser.html"
-    themes_file_template = "admin/django_themes/editor/browser.html"
+    def save_model(self, request, obj, form, change):
+
+        super(ThemeAdmin, self).save_model(request, obj, form, change)
+
+        try:
+            full_path = default_theme_storage.path(obj.path)
+        except NotImplementedError:
+            full_path = None
+
+        if full_path:
+            os.mkdir(full_path)
 
 admin.site.register(Theme, ThemeAdmin)
