@@ -132,20 +132,31 @@ class ThemeAdminView(GenericAdminView):
         full_path = self.join_theme_path(self.theme.path, self.path)
 
         try:
-            # Try to list dir (check if folder)
-            folders, files = default_theme_storage.listdir(full_path)
-            _type = "folder"
-        except:
-            if not default_theme_storage.exists(full_path):
-                # If the path doesn't exist
-                return HttpResponse('No such directory %s/%s' % (settings.THEMES_FILE_ROOT, full_path))
-            # If not directory but file exists
-            _type = "file"
+            path = default_theme_storage.path(full_path)
+        except NotImplementedError:
+            # Will not be implemented in db files
+            path = None
 
-        # This is required for database_files since exeption will not be thrown above
-        if _type == "folder" and files == [] and folders == []:
-            if default_theme_storage.exists(full_path):
+        if path:
+            # If a system path does not exist
+            if not default_theme_storage.exists(path):
+                return HttpResponse('No such directory %s'%path)
+            # If we have a system path can use os.path.isdir to decide
+            if os.path.isdir(path):
+                _type = "folder"
+            else:
+                _type = "path"
+        else:
+            # If not on a real file system use listdir to decide
+            folders, files = default_theme_storage.listdir(full_path)
+            if files == [] and folders == []:
                 _type = "file"
+            else:
+                _type = "folder"
+
+            if not self.path:
+                # If this is the base directory of the theme it must be a folder
+                _type = "folder"
 
         if  _type == "folder":
             return self.render_folder()
