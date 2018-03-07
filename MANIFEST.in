@@ -1,0 +1,4 @@
+include LICENSE
+recursive-include django_themes/static/ *
+recursive-include django_themes/templates/ *
+recursive-include django_themes/migrations/ *
