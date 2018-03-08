@@ -10,6 +10,8 @@ from django.db.models import Q
 from django.template import Origin, TemplateDoesNotExist
 from django.utils._os import safe_join
 from django.template.loaders.base import Loader as BaseLoader
+from django.template.loaders.cached import Loader as CachedLoader
+from django.template import TemplateDoesNotExist
 import posixpath
 
 from django_themes.middleware import get_current_user_key
@@ -73,3 +75,29 @@ class ThemeTemplateLoader(BaseLoader):
                     template_name=template_name,
                     loader=self
                 )
+
+class CachedThemeTemplateLoader(CachedLoader):
+
+    def __init__(self, engine):
+        themeLoader = 'django_themes.loaders.ThemeTemplateLoader'
+        loaders = [themeLoader]
+        super(CachedThemeTemplateLoader, self).__init__(engine, loaders)
+
+    def get_template(self, template_name, template_dirs=None, skip=None):
+
+        user_key = get_current_user_key()
+
+        preview_pks = []
+        if user_key is not None:
+            preview_pks = get_previewing_themes(user_key)
+
+        if len(preview_pks) > 0:
+            # Don't use the cache
+            print('not using cache')
+            template = super(CachedLoader, self).get_template(template_name, template_dirs, skip)
+        else:
+            # Use the cache
+            print('using cache')
+            template = super(CachedThemeTemplateLoader, self).get_template(template_name, template_dirs, skip)
+
+        return template
