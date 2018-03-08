@@ -241,24 +241,26 @@ class EditView(GenericAdminView, FormView):
 
     def form_valid(self, form):
 
+
         post_save_delete_path = None
         if form.cleaned_data['path'] != self.path:
             # Check stuff
             post_save_delete_path = self.path
             path = form.cleaned_data['path']
+            self.check_path(path)
 
             message = "File '%s' saved and renamed successfully!" % self.path
         else:
             message = "File '%s' saved successfully!" % self.path
+            path = self.path
 
-        full_path = self.join_theme_path(self.theme.path, self.path)
+        full_path = self.join_theme_path(self.theme.path, path)
         file_editor = form.cleaned_data['file_editor']
 
         if default_theme_storage.exists(full_path):
             default_theme_storage.delete(full_path)
 
         file_editor_io = io.BytesIO(file_editor.encode(encoding))
-        self.check_path(full_path)
         default_theme_storage.save(full_path, file_editor_io)
 
         messages.success(self.request, message)
@@ -306,6 +308,8 @@ class NewView(GenericAdminView, FormView):
         path = form.cleaned_data['path']
         file_editor = form.cleaned_data['file_editor']
 
+        self.check_path(path)
+
         message = "File '%s' saved successfully!" % path
         full_path = self.join_theme_path(self.theme.path, path)
 
@@ -313,7 +317,6 @@ class NewView(GenericAdminView, FormView):
             return HttpResponse('already exists')
 
         file_editor_io = io.BytesIO(file_editor.encode(encoding))
-        self.check_path(full_path)
         default_theme_storage.save(full_path, file_editor_io)
 
         messages.success(self.request, message)
@@ -336,10 +339,12 @@ class UploadView(GenericAdminView, FormView):
         message = "Files uploaded successfully!"
 
         files = self.request.FILES.getlist('file_upload')
+        path = form.cleaned_data['path']
+        self.check_path(path)
+
         for f in files:
-            theme_path = self.join_theme_path(self.theme.path, form.cleaned_data['path'])
+            theme_path = self.join_theme_path(self.theme.path, path)
             full_path = os.path.join(theme_path, f.name)
-            self.check_path(full_path)
             default_theme_storage.save(full_path, f)
 
         messages.success(self.request, message)
@@ -350,13 +355,13 @@ class UploadAjaxView(GenericAdminView):
 
     def post(self, request, theme_id, path):
         submitted_path = request.POST.get('path')
+        self.check_path(submitted_path)
         logger.debug('path: %s'%submitted_path)
         try:
             files = request.FILES.getlist('file_upload')
             for f in files:
                 theme_path = self.join_theme_path(self.theme.path, submitted_path)
                 full_path = os.path.join(theme_path, f.name)
-                self.check_path(full_path)
                 default_theme_storage.save(full_path, f)
             message = {"ok": "Files uploaded successfully!"}
             code = 200
