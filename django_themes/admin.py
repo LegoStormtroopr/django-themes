@@ -18,7 +18,7 @@ from django.utils.text import capfirst
 from django.utils.decorators import method_decorator
 
 from django_themes.models import Theme
-from django_themes.utils import add_theme_to_preview, get_previewing_themes, set_themes_to_preview, sizeof_fmt, unset_preview_themes
+from django_themes.utils import add_theme_to_preview, get_previewing_themes, set_themes_to_preview, sizeof_fmt, unset_preview_themes, clear_template_cache
 from django_themes.views import ThemeAdminView, EditView, DeleteView, NewView, UploadView, UploadAjaxView
 from django_themes.storage import default_theme_storage
 
@@ -99,6 +99,8 @@ class ThemeAdmin(admin.ModelAdmin):
 
         super(ThemeAdmin, self).save_model(request, obj, form, change)
 
+        clear_template_cache()
+        
         try:
             full_path = default_theme_storage.path(obj.path)
         except NotImplementedError:
