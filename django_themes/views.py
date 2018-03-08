@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.template.engine import Engine as TemplateEngine
+from django.template.exceptions import TemplateDoesNotExist
 
 from django_themes.storage import default_theme_storage, encoding
 from django_themes.models import Theme
@@ -121,11 +123,30 @@ class GenericAdminView(PermissionRequiredMixin, TemplateView):
             self.filedata = self.read_file()
 
     def check_path(self, path):
-        # If path includes the templates directory, clear the template cache
+        # If the file being saved overwrites an existing template, clear the template cache
+        # Returns 1 when cleared 0 when not cleared
+
         search_string = 'templates/'
         index = path.find(search_string)
-        if index != -1:
+
+        if index == -1:
+            # If not found
+            return 0
+
+        end_index = index + len(search_string)
+        template_name = path[end_index:]
+
+        try:
+            template = TemplateEngine.get_default().find_template(template_name)
+        except TemplateDoesNotExist:
+            template = None
+
+        if template:
+            # If overriding existing template
             clear_template_cache()
+            return 1
+
+        return 0
 
 class ThemeAdminView(GenericAdminView):
 
