@@ -13,7 +13,7 @@
 
 {% block content %}<div id="content-main" class="theme-editor">
     <div>
-    
+
     <ul class="theme-editor path breadcrumbs">
         {% for part, sub_path in paths %}
             <li>
@@ -21,55 +21,65 @@
             </li>
         {% endfor %}
     </ul>
-    
+
     </div>
 
-    <form action="?action=upload" method='POST' class="dropzone" id="upload-dropzone" enctype="multipart/form-data">
+    <form action="{% url 'admin:admin_upload' theme.id path %}" method='POST' class="dropzone" id="upload-dropzone" enctype="multipart/form-data">
 
         {% csrf_token %}
         {% if 'file_upload' in form.errors.keys %}
             ff: {{ form.file_upload.errors }}
         {% endif %}
         <div id="message"></div>
-        
+
+        <div id="path_wrapper">
+        <label for="{{ form.path.id_for_label }}">Upload to directory</label>
+        {{ form.path }}
+        </div>
+
         <div class="fallback">
             {{ form.file_upload }}
             <div class="theme-editor submit-row">
-                <button class="button" type='submit'>
-                    Upload
-                </button>
-                <a class="button" href="?">
-                    Cancel
-                </a>
+              <button class="button" type="submit" id='upload'>
+                  Upload
+              </button>
+              <a class="button" href="{% url opts|admin_urlname:'theme_editor' theme.id path %}">
+                  Cancel
+              </a>
             </div>
-
         </div>
 
-        <div class="theme-editor submit-row">
-            <a class="button" id='upload'>
-                Upload
-            </a>
-            <a class="button" href="?">
-                Cancel
-            </a>
+        <div id='upload_all_div' class="theme-editor submit-row" style="visibility: hidden">
+            <button class="button" id='upload_all'>
+                Upload All
+            </button>
         </div>
-    
+
     </form>
 
 <script>
-Dropzone.options.uploadDropzone = {
+Dropzone.autoDiscover = false;
+var my_dropzone = new Dropzone('#upload-dropzone', {
   paramName: "file_upload", // The name that will be used to transfer the file
-  multiple:true,
+  uploadMultiple: false,
+  createImageThumbnails: false,
   maxFilesize: 6, // MB
-  url: "?action=upload_ajax",
   addRemoveLinks: true,
+  url: "{% url 'admin:admin_upload_ajax' theme.id path %}",
   autoProcessQueue: false,
+  params: function(files, xhr, chunk) {
+    var path = document.getElementById('id_path').value
+    return {
+      "path": path
+    }
+  },
+
   init: function() {
     var myDropzone = this;
-
+    this.element.querySelector("#upload_all_div").style.visibility = "visible"
     // First change the button to actually tell Dropzone to process the queue.
-    this.element.querySelector("#upload").addEventListener("click", function(e) {
-      console.log("clicky");
+    this.element.querySelector("#upload_all").addEventListener("click", function(e) {
+      //console.log("clicky");
       myDropzone.processQueue();
       e.preventDefault();
       e.stopPropagation();
@@ -77,37 +87,30 @@ Dropzone.options.uploadDropzone = {
       p.innerHTML = "<b>Your files are being uploaded, once complete things happen</b>"
       document.getElementById("message").appendChild(p)
     });
-    // this.element.querySelector("button[type=submit]").addEventListener("click", function(e) {
-    //   // Make sure that the form isn't actually being sent.
-    //   e.preventDefault();
-    //   e.stopPropagation();
-    //   myDropzone.processQueue();
-    //   console.log("here",this, myDropzone);
-    // });
+
     this.on("completemultiple", function(files) {
-       console.log(files) 
+       console.log(files)
       var p = document.createElement('p');
       p.innerHTML = "<b>Your files are done!</b>"
       document.getElementById("message").appendChild(p)
-    //   window.location.replace("?");
     });
 
     this.on("sendingmultiple", function(files) {
-      console.log(files) 
+      //console.log(files)
       var message = "<p><b>Your files are being uploaded once processed, you'll be redirected</b></p>"
       document.getElementById("message").innerHTML = message
     });
 
     this.on("success", function() {
-      console.log("Doing more!!") 
-      console.log("q", myDropzone.getQueuedFiles(), myDropzone.getQueuedFiles().length == 0)
-      console.log("p", myDropzone.getUploadingFiles(), myDropzone.getUploadingFiles().length == 0)
+      //console.log("Doing more!!")
+      //console.log("q", myDropzone.getQueuedFiles(), myDropzone.getQueuedFiles().length == 0)
+      //console.log("p", myDropzone.getUploadingFiles(), myDropzone.getUploadingFiles().length == 0)
 
       if (myDropzone.getQueuedFiles().length == 0 && myDropzone.getUploadingFiles().length == 0) {
         // All done
         var message = "<p><b>Complete!</b></p>"
         document.getElementById("message").innerHTML = message
-        window.location.replace("?");
+        // window.location.replace("?");
       } else {
         // Keep going!
         myDropzone.processQueue();
@@ -115,7 +118,7 @@ Dropzone.options.uploadDropzone = {
     });
 
   }
-}
+});
 </script>
 
 </div>

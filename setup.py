@@ -1,6 +1,6 @@
 import os
 from setuptools import setup
-from django_spaghetti import __version__
+__version__ = 1.1
 
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as readme:
     README = readme.read()
@@ -34,6 +34,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     keywords='django themes',
-    install_requires=['django'], # I mean obviously you'll have django installed if you want to use this.
+    install_requires=['django', 'python-magic'], # I mean obviously you'll have django installed if you want to use this.
 
 )

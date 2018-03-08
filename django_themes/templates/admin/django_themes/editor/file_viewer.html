@@ -3,20 +3,26 @@
 
 {% block file_content %}
     <div class="theme-editor file-details">
-        <pre>{{file.lines}} lines | {{file.size}}</pre>
+        <pre>{% if file.filetype == 'text' %}{{file.lines}} lines |{% endif %} {{file.size}}</pre>
         <span class="actions">
-            <a class="button" href="?action=edit">
+            {% if file.filetype == 'text' %}
+            <a class="button" href="{% url 'admin:admin_edit' theme.id path %}">
                 <i class="octicon octicon-pencil"></i> Edit
             </a>
-            <a class="button delete" href="?action=delete">
+            {% endif %}
+            <a class="button delete" href="{% url 'admin:admin_delete' theme.id path %}">
                 <i class="octicon octicon-trashcan"></i> Delete
             </a>
         </span>
     </div>
-    
+
     <div id="ace-holder">
 
+    {% if file.filetype == 'text' %}
     <textarea class="theme-editor editor" name="file_editor" data-editor="{{file.ext}}" rows="15">{{file.contents}}</textarea>
+    {% elif file.filetype == 'image' %}
+    <img src="{{ file.contents }}"></img>
+    {% endif %}
 
     </div>
 {% endblock %}

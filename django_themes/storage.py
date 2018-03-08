@@ -1,15 +1,19 @@
 from django.conf import settings
-from django.utils.functional import LazyObject
 from django.utils.module_loading import import_string
 
+from django.core.files.storage import FileSystemStorage
 
 def get_storage_class(import_path=None):
-    return import_string(import_path or settings.THEMES_FILE_STORAGE)
+    module = import_path or settings.THEMES_FILE_STORAGE
+    return import_string(module)
 
+def get_theme_storage():
+    storage_class = get_storage_class()
 
-class DefaultStorage(LazyObject):
-    def _setup(self):
-        self._wrapped = get_storage_class()(location=settings.THEMES_FILE_ROOT)
+    if issubclass(storage_class, FileSystemStorage):
+        return storage_class(location=settings.THEMES_FILE_ROOT)
+    else:
+        return storage_class()
 
-
-default_theme_storage = DefaultStorage()
+default_theme_storage = get_theme_storage()
+encoding = 'utf-8'

@@ -11,7 +11,7 @@
 
 {% block content %}<div id="content-main" class="theme-editor">
     <div>
-    
+
     <ul class="theme-editor path breadcrumbs">
         {% for part, sub_path in paths %}
             <li>
@@ -19,13 +19,13 @@
             </li>
         {% endfor %}
     </ul>
-    
+
     <div class="theme-editor folder-details">
         <span class="actions">
-            <a class="button" href="?action=new">
+            <a class="button" href="{% url 'admin:admin_new' theme.id path %}">
                 <i class="octicon octicon-trashcan"></i> Create new file
             </a>
-            <a class="button" href="?action=upload">
+            <a class="button" href="{% url 'admin:admin_upload' theme.id path %}">
                 <i class="octicon octicon-cloud-upload"></i> Upload
             </a>
         </span>
@@ -56,10 +56,10 @@
                     <a href="{% url opts|admin_urlname:'theme_editor' theme_id=theme.pk|admin_urlquote path=folder.path %}">{{folder.name}}</a>
                 </td>
                 <td>
-                    
+
                 </td>
                 <td>
-                    
+
                 </td>
             </tr>
         {% endfor %}
@@ -87,7 +87,7 @@
         {% endfor %}
         </tbody>
         {% endif %}
-    </table>        
+    </table>
 
 {% block object-tools %}
 {% if change %}{% if not is_popup %}

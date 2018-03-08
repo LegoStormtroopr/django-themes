@@ -1,5 +1,5 @@
 from __future__ import absolute_import, division, print_function
-
+from django.utils.deprecation import MiddlewareMixin
 try:
     from threading import local
 except ImportError:
@@ -11,7 +11,7 @@ def get_current_user_key():
     """ returns the request object for this thread """
     return getattr(_thread_locals, "current_user_key", None)
 
-class PreviewWithCurrentUserMiddleware(object):
+class PreviewWithCurrentUserMiddleware(MiddlewareMixin, object):
     """ Simple middleware that adds the request object in thread local storage."""
 
     def process_request(self, request):
