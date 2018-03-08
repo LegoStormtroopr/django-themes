@@ -197,6 +197,23 @@ class DjangoThemesTestCase(TestCase):
 
         self.save_file('/admin/django_themes/theme/1/files/editfile.txt/edit', 'editfile.txt', 'we changed it', self.theme)
 
+    def test_rename_file(self):
+        self.login_superuser()
+        # Save test file
+        self.save_file('/admin/django_themes/theme/1/files//new', '/renamefile.txt', 'please rename this', self.theme)
+
+        #rename file
+        #self.save_file('/admin/django_themes/theme/1/files/renamefile.txt/edit', 'finalfile.txt', 'we changed it', self.theme)
+        post_response = self.client.post('/admin/django_themes/theme/1/files/renamefile.txt/edit', {'path': 'finalfile.txt', 'file_editor': 'we changed it'})
+        self.assertEqual(post_response.status_code, 302)
+        # Check if redirected to new file
+        self.assertRedirects(post_response, '/admin/django_themes/theme/1/files/finalfile.txt')
+        # Check if new file has been saved
+        self.check_file_saved('finalfile.txt', 'we changed it', self.theme)
+        # Check the old file has been deleted
+        old_file_path = pathjoin(self.theme.path, 'renamefile.txt')
+        self.assertFalse(self.storage.exists(old_file_path))
+
     def test_delete_file(self):
         self.login_superuser()
         # Save test file
