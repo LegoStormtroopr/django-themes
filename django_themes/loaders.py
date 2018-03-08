@@ -93,11 +93,9 @@ class CachedThemeTemplateLoader(CachedLoader):
 
         if len(preview_pks) > 0:
             # Don't use the cache
-            print('not using cache')
             template = super(CachedLoader, self).get_template(template_name, template_dirs, skip)
         else:
             # Use the cache
-            print('using cache')
             template = super(CachedThemeTemplateLoader, self).get_template(template_name, template_dirs, skip)
 
         return template
