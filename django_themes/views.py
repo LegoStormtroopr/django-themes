@@ -266,6 +266,7 @@ class EditView(GenericAdminView, FormView):
         messages.success(self.request, message)
         if post_save_delete_path:
             default_theme_storage.delete(self.join_theme_path(self.theme.path, post_save_delete_path))
+            self.path = path # So the redirect goes to new file
 
         return HttpResponseRedirect(self.get_success_url())
 
