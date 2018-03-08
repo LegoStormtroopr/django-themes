@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.urls import reverse
 from django.core.files.storage import FileSystemStorage
+from django.forms.models import model_to_dict
 
 from django_themes.models import Theme
 from django_themes.forms import ThemeAdminFileForm
@@ -279,8 +280,12 @@ class DjangoThemesTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'<p>Brand New Page</p>')
         # Set second theme to inactive
-        secondtheme.is_active=False
-        secondtheme.save()
+        data = model_to_dict(secondtheme)
+        data.pop('is_active')
+        post_response = self.client.post('/admin/django_themes/theme/2/change/', data)
+        self.assertEqual(post_response.status_code, 302)
+        newlysaved = Theme.objects.get(name='New Theme')
+        self.assertEqual(newlysaved.is_active, False)
         # Check first theme used
         response = self.client.get('/test')
         self.assertEqual(response.status_code, 200)

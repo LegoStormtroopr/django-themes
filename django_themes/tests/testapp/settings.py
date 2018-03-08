@@ -43,15 +43,21 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'django_themes.tests.testapp.urls'
 
-TEMPLATE_LOADERS = [
-    'django_themes.loaders.ThemeTemplateLoader',
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader'
-    ]
-
 CACHED_LOADER = os.getenv('CACHED_LOADER', 0)
 if int(CACHED_LOADER) == 1:
-    TEMPLATE_LOADERS = [('django.template.loaders.cached.Loader', TEMPLATE_LOADERS)]
+    TEMPLATES_LOADERS = [
+        'django_themes.loaders.CachedThemeTemplateLoader',
+        ('django.template.loaders.cached.Loader', [
+            'django.template.loaders.filesystem.Loader',
+            'django.template.loaders.app_directories.Loader']
+        )
+    ]
+else:
+    TEMPLATES_LOADERS = [
+        'django_themes.loaders.ThemeTemplateLoader',
+        'django.template.loaders.filesystem.Loader',
+        'django.template.loaders.app_directories.Loader'
+        ]
 
 TEMPLATES = [
     {
@@ -65,7 +71,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
-            'loaders': TEMPLATE_LOADERS
+            'loaders': TEMPLATES_LOADERS
         },
     },
 ]
