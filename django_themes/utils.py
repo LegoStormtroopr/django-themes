@@ -1,6 +1,5 @@
 from django.core.cache import cache
 from django.template.engine import Engine as TemplateEngine
-from django.template.loaders.cached import Loader as CachedLoader
 
 THEME_CACHE_KEY_PREFIX = "django_themes__"
 
@@ -54,5 +53,5 @@ def clear_template_cache():
 
     templates_list = TemplateEngine.get_default().template_loaders
     for t in templates_list:
-        if isinstance(t, CachedLoader) or isinstance(t, CachedThemeTemplateLoader):
+        if isinstance(t, CachedThemeTemplateLoader):
             t.reset()
