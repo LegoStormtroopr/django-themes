@@ -93,9 +93,17 @@ class CachedThemeTemplateLoader(CachedLoader):
 
         if len(preview_pks) > 0:
             # Don't use the cache
-            template = super(CachedLoader, self).get_template(template_name, template_dirs, skip)
+            try:
+                template = super(CachedLoader, self).get_template(template_name, template_dirs, skip)
+            except TypeError:
+                # For django 2.0 compatibility
+                template = super(CachedLoader, self).get_template(template_name, skip)
         else:
             # Use the cache
-            template = super(CachedThemeTemplateLoader, self).get_template(template_name, template_dirs, skip)
+            try:
+                template = super(CachedThemeTemplateLoader, self).get_template(template_name, template_dirs, skip)
+            except TypeError:
+                # For django 2.0 compatibility
+                template = super(CachedLoader, self).get_template(template_name, skip)
 
         return template
