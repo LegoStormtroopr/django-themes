@@ -11,18 +11,19 @@ def theme_cache_key(user, mode):
         user_key = user.pk
     return "-".join(map(str,[THEME_CACHE_KEY_PREFIX, mode, user_key]))
 
-
 def add_theme_to_preview(user, theme):
     key = theme_cache_key(user, "previewing")
     themes_pks = get_previewing_themes(user)
     themes_pks = list(set(themes_pks + theme.pk))
     cache.set(key,themes_pks, 500)
 
-
 def get_previewing_themes(user):
     key = theme_cache_key(user, "previewing")
-    return list(cache.get(key) or [])
-
+    result = cache.get(key)
+    if result is None:
+        return []
+    else:
+        return list(result)
 
 def set_themes_to_preview(user, themes):
     key = theme_cache_key(user, "previewing")
@@ -49,8 +50,9 @@ def sizeof_fmt(num, suffix='B'):
     return  ("%.2f"%num, 'Yi'+suffix)
 
 def clear_template_cache():
+    from django_themes.loaders import CachedThemeTemplateLoader
 
     templates_list = TemplateEngine.get_default().template_loaders
     for t in templates_list:
-        if isinstance(t, CachedLoader):
+        if isinstance(t, CachedLoader) or isinstance(t, CachedThemeTemplateLoader):
             t.reset()
