@@ -104,6 +104,6 @@ class CachedThemeTemplateLoader(CachedLoader):
                 template = super(CachedThemeTemplateLoader, self).get_template(template_name, template_dirs, skip)
             except TypeError:
                 # For django 2.0 compatibility
-                template = super(CachedLoader, self).get_template(template_name, skip)
+                template = super(CachedThemeTemplateLoader, self).get_template(template_name, skip)
 
         return template
