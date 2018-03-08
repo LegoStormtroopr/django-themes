@@ -32,7 +32,7 @@ How to install & configure
     THEMES_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage' # Or whatever storage you need
 
 4. If you need to render uploaded templates add the template loader 'django_themes.loaders.ThemeTemplateLoader' to your TEMPLATES setting
-or if you want the templates to be cached you can use the CachedThemeTemplateLoader outside of the regular cached loader like this
+or if you want the templates to be cached you can use the CachedThemeTemplateLoader outside of the regular cached loader like this::
 
     'django_themes.loaders.CachedThemeTemplateLoader',
     ('django.template.loaders.cached.Loader', [
