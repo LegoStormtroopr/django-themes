@@ -32,6 +32,14 @@ How to install & configure
     THEMES_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage' # Or whatever storage you need
 
 4. If you need to render uploaded templates add the template loader 'django_themes.loaders.ThemeTemplateLoader' to your TEMPLATES setting
+or if you want the templates to be cached you can use the CachedThemeTemplateLoader outside of the regular cached loader like this
+
+    'django_themes.loaders.CachedThemeTemplateLoader',
+    ('django.template.loaders.cached.Loader', [
+        'django.template.loaders.filesystem.Loader',
+        'django.template.loaders.app_directories.Loader']
+        ...
+    )
 
 5. If you want to be able to preview themes live, add the appropriate middleware *after* everything else.
    Note: to get the current user during template loading, this needs to store the user of a request in ``_thread_locals``.
