@@ -100,13 +100,13 @@ class ThemeAdmin(admin.ModelAdmin):
         super(ThemeAdmin, self).save_model(request, obj, form, change)
 
         clear_template_cache()
-        
+
         try:
             full_path = default_theme_storage.path(obj.path)
         except NotImplementedError:
             full_path = None
 
-        if full_path:
+        if full_path and not os.path.exists(full_path):
             os.mkdir(full_path)
 
 admin.site.register(Theme, ThemeAdmin)
